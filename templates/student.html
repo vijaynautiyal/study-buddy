@@ -71,8 +71,8 @@
           placeholder="Enter your registered name"
           required
         />
-        <select id="grade">
-          <option value="" disabled selected>Select Class</option>
+        <select id="grade" onchange="loadStudentSubjects()">
+          <option value="" disabled selected>Select your Class</option>
           <option value="1">Class 1</option>
           <option value="2">Class 2</option>
           <option value="3">Class 3</option>
@@ -83,9 +83,7 @@
           <option value="8">Class 8</option>
         </select>
         <select id="subject">
-          <option value="Maths">Maths</option>
-          <option value="Science">Science</option>
-          <option value="English">English</option>
+          <option value="" disabled selected>Select Subject</option>
         </select>
         <button onclick="startQuiz()">Start Playing!</button>
         <p id="setupMessage" style="color: red"></p>
@@ -125,6 +123,23 @@
 
     <script>
       let currentQuestionId = null;
+
+      async function loadStudentSubjects() {
+        const grade = document.getElementById("grade").value;
+        const select = document.getElementById("subject");
+        select.innerHTML =
+          '<option value="" disabled selected>Loading...</option>';
+
+        if (!grade) return;
+        const response = await fetch(`/api/subjects/${grade}`);
+        const subjects = await response.json();
+
+        select.innerHTML =
+          '<option value="" disabled selected>Select Subject</option>';
+        subjects.forEach((sub) => {
+          select.innerHTML += `<option value="${sub.name}">${sub.name}</option>`;
+        });
+      }
 
       async function startQuiz() {
         const name = document.getElementById("studentName").value;

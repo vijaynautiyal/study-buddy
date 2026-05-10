@@ -2,21 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Parent Dashboard - Add Questions</title>
+    <title>Parent Dashboard - Content Manager</title>
     <style>
       body {
         font-family: Arial, sans-serif;
         text-align: center;
-        padding: 30px;
+        padding: 20px;
         background-color: #e9ecef;
       }
       .card {
         background: white;
         padding: 20px;
         border-radius: 10px;
-        width: 400px;
-        margin: 0 auto;
+        width: 450px;
+        margin: 15px auto;
         box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
       }
       input,
@@ -29,32 +28,80 @@
         border-radius: 5px;
         border: 1px solid #ccc;
       }
-      button {
+      .btn-add {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      .btn-pub {
         background-color: #007bff;
         color: white;
         border: none;
         cursor: pointer;
         font-weight: bold;
       }
-      button:hover {
-        background-color: #0056b3;
-      }
       .row {
         display: flex;
         justify-content: space-between;
       }
+      .row select,
       .row input {
         width: 45%;
+      }
+      .subject-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px;
+        border-bottom: 1px solid #eee;
+      }
+      .btn-del {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+        border-radius: 3px;
       }
     </style>
   </head>
   <body>
+    <!-- Section 1: Manage Subjects (CRUD) -->
     <div class="card">
-      <h2>Publish a Question 📚</h2>
+      <h2>📚 Manage Subjects</h2>
+      <div class="row">
+        <select id="manageClassSelect" onchange="loadManageSubjects()">
+          <option value="" disabled selected>Select Class</option>
+          <option value="1">Class 1</option>
+          <option value="2">Class 2</option>
+          <option value="3">Class 3</option>
+          <option value="4">Class 4</option>
+          <option value="5">Class 5</option>
+          <option value="6">Class 6</option>
+          <option value="7">Class 7</option>
+          <option value="8">Class 8</option>
+        </select>
+        <input type="text" id="newSubjectName" placeholder="New Subject Name" />
+      </div>
+      <button class="btn-add" onclick="addSubject()">
+        Add Subject to Class
+      </button>
+      <p id="subMsg" style="font-weight: bold"></p>
 
+      <div id="subjectList" style="text-align: left; margin-top: 10px">
+        <p style="color: gray; text-align: center">
+          Select a class to view subjects.
+        </p>
+      </div>
+    </div>
+
+    <!-- Section 2: Publish a Question -->
+    <div class="card">
+      <h2>📝 Publish a Question</h2>
       <form id="questionForm">
         <div class="row">
-          <select id="grade" required>
+          <select id="qClass" required onchange="loadQuestionSubjects()">
             <option value="" disabled selected>Select Class</option>
             <option value="1">Class 1</option>
             <option value="2">Class 2</option>
@@ -66,11 +113,8 @@
             <option value="8">Class 8</option>
           </select>
 
-          <select id="subject" required>
+          <select id="qSubject" required>
             <option value="" disabled selected>Select Subject</option>
-            <option value="Maths">Maths</option>
-            <option value="Science">Science</option>
-            <option value="English">English</option>
           </select>
         </div>
 
@@ -80,7 +124,6 @@
           placeholder="Type the question here..."
           required
         ></textarea>
-
         <input type="text" id="optA" placeholder="Option A" required />
         <input type="text" id="optB" placeholder="Option B" required />
         <input type="text" id="optC" placeholder="Option C" required />
@@ -93,22 +136,88 @@
           <option value="C">Option C</option>
           <option value="D">Option D</option>
         </select>
-
-        <button type="submit">Publish to Study Buddy</button>
+        <button type="submit" class="btn-pub">Publish to Study Buddy</button>
       </form>
-
-      <p id="message" style="color: green; font-weight: bold"></p>
+      <p id="qMsg" style="color: green; font-weight: bold"></p>
     </div>
 
     <script>
+      // --- Subject Manager Logic ---
+      async function loadManageSubjects() {
+        const grade = document.getElementById("manageClassSelect").value;
+        if (!grade) return;
+
+        const response = await fetch(`/api/subjects/${grade}`);
+        const subjects = await response.json();
+
+        const list = document.getElementById("subjectList");
+        list.innerHTML = "";
+        subjects.forEach((sub) => {
+          list.innerHTML += `
+                    <div class="subject-item">
+                        <span>${sub.name}</span>
+                        <button class="btn-del" onclick="deleteSubject(${sub.id})">❌</button>
+                    </div>`;
+        });
+      }
+
+      async function addSubject() {
+        const grade = document.getElementById("manageClassSelect").value;
+        const name = document.getElementById("newSubjectName").value;
+        if (!grade || !name) return;
+
+        const response = await fetch("/api/add_subject", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ grade_class: grade, name: name }),
+        });
+        const result = await response.json();
+
+        document.getElementById("subMsg").innerText = result.message;
+        document.getElementById("subMsg").style.color = result.success
+          ? "green"
+          : "red";
+
+        if (result.success) {
+          document.getElementById("newSubjectName").value = "";
+          loadManageSubjects();
+          loadQuestionSubjects(); // Update the dropdown below too!
+        }
+      }
+
+      async function deleteSubject(id) {
+        if (confirm("Delete this subject?")) {
+          await fetch(`/api/delete_subject/${id}`, { method: "DELETE" });
+          loadManageSubjects();
+          loadQuestionSubjects();
+        }
+      }
+
+      // --- Question Publisher Logic ---
+      async function loadQuestionSubjects() {
+        const grade = document.getElementById("qClass").value;
+        const select = document.getElementById("qSubject");
+        select.innerHTML =
+          '<option value="" disabled selected>Loading...</option>';
+
+        if (!grade) return;
+        const response = await fetch(`/api/subjects/${grade}`);
+        const subjects = await response.json();
+
+        select.innerHTML =
+          '<option value="" disabled selected>Select Subject</option>';
+        subjects.forEach((sub) => {
+          select.innerHTML += `<option value="${sub.name}">${sub.name}</option>`;
+        });
+      }
+
       document
         .getElementById("questionForm")
         .addEventListener("submit", async function (e) {
           e.preventDefault();
-
-          const questionData = {
-            grade_class: document.getElementById("grade").value,
-            subject: document.getElementById("subject").value,
+          const data = {
+            grade_class: document.getElementById("qClass").value,
+            subject: document.getElementById("qSubject").value,
             question_text: document.getElementById("questionText").value,
             option_a: document.getElementById("optA").value,
             option_b: document.getElementById("optB").value,
@@ -116,16 +225,16 @@
             option_d: document.getElementById("optD").value,
             correct_option: document.getElementById("correctOpt").value,
           };
-
           const response = await fetch("/api/add_question", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(questionData),
+            body: JSON.stringify(data),
           });
-
           const result = await response.json();
-          document.getElementById("message").innerText = result.message;
+          document.getElementById("qMsg").innerText = result.message;
           document.getElementById("questionForm").reset();
+          document.getElementById("qSubject").innerHTML =
+            '<option value="" disabled selected>Select Subject</option>';
         });
     </script>
   </body>

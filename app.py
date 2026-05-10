@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 # --- DATABASE CONFIGURATION ---
 # This tells Python to look for a Render database FIRST. If it doesn't find one, it uses your local one!
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://postgres:your_password_hereGrokDeep234##@localhost/study_buddy')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://postgres:GrokDeep234##@localhost/study_buddy')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -35,6 +35,11 @@ class Commodity(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     cost = db.Column(db.Integer, nullable=False)
+
+class Subject(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    grade_class = db.Column(db.Integer, nullable=False)
+    name = db.Column(db.String(50), nullable=False)
 
 # --- ROUTES ---
 
@@ -229,9 +234,61 @@ def get_balance():
         return jsonify({"error": "Student not found"}), 404
     return jsonify({"name": user.name, "points": user.reward_points})
 
-# --- AUTO-BUILD DATABASE TABLES ---
+
+# 14. API to Fetch Subjects for a Specific Class
+@app.route('/api/subjects/<int:grade>', methods=['GET'])
+def get_subjects(grade):
+    subjects = Subject.query.filter_by(grade_class=grade).all()
+    return jsonify([{"id": s.id, "name": s.name} for s in subjects])
+
+# 15. API for Parents to Add a Subject
+@app.route('/api/add_subject', methods=['POST'])
+def add_subject():
+    data = request.get_json()
+    grade = int(data['grade_class'])
+    name = data['name'].strip()
+    
+    # Check for duplicates (Case Insensitive)
+    existing = Subject.query.filter(Subject.grade_class == grade, func.lower(Subject.name) == func.lower(name)).first()
+    if existing:
+        return jsonify({"success": False, "message": f"'{existing.name}' already exists in Class {grade}!"})
+        
+    new_sub = Subject(grade_class=grade, name=name)
+    db.session.add(new_sub)
+    db.session.commit()
+    return jsonify({"success": True, "message": f"Added {name} to Class {grade}!"})
+
+# 16. API to Delete a Subject
+@app.route('/api/delete_subject/<int:sub_id>', methods=['DELETE'])
+def delete_subject(sub_id):
+    sub = Subject.query.get(sub_id)
+    if sub:
+        db.session.delete(sub)
+        db.session.commit()
+        return jsonify({"success": True})
+    return jsonify({"success": False}), 404
+
+# --- AUTO-BUILD DATABASE & DEFAULTS ---
 with app.app_context():
     db.create_all()
+    
+    # If the Subject table is completely empty, auto-fill the CBSE defaults!
+    if not Subject.query.first():
+        defaults = {
+            1: ['EVS', 'Hindi', 'Maths', 'English'],
+            2: ['EVS', 'Hindi', 'Maths', 'English'],
+            3: ['EVS', 'Hindi', 'Maths', 'English'],
+            4: ['EVS', 'Hindi', 'Maths', 'English'],
+            5: ['EVS', 'Hindi', 'Maths', 'English'],
+            6: ['Geography', 'Civics', 'History', 'Science', 'English', 'Hindi', 'Maths'],
+            7: ['Geography', 'Civics', 'History', 'Science', 'English', 'Hindi', 'Maths'],
+            8: ['Geography', 'Civics', 'History', 'Science', 'English', 'Hindi', 'Maths']
+        }
+        for grade, subjects in defaults.items():
+            for sub_name in subjects:
+                db.session.add(Subject(grade_class=grade, name=sub_name))
+        db.session.commit()
+        print("✅ CBSE Default Subjects Loaded!")
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
