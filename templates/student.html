@@ -2,7 +2,6 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Study Buddy - Student Arena</title>
     <style>
       body {
@@ -36,18 +35,12 @@
         font-weight: bold;
         font-size: 16px;
       }
-      button:hover {
-        background-color: #e0a800;
-      }
       .option-btn {
         background-color: #17a2b8;
         color: white;
         display: block;
         margin: 5px auto;
         width: 95%;
-      }
-      .option-btn:hover {
-        background-color: #138496;
       }
       .hidden {
         display: none;
@@ -63,7 +56,7 @@
     <div class="card">
       <h2>🎮 Student Arena</h2>
 
-      <!-- Step 1: Student Enters Details -->
+      <!-- SECURE SETUP AREA -->
       <div id="setupArea">
         <input
           type="text"
@@ -85,14 +78,21 @@
         <select id="subject">
           <option value="" disabled selected>Select Subject</option>
         </select>
-        <button onclick="startQuiz()">Start Playing!</button>
-        <p id="setupMessage" style="color: red"></p>
+
+        <!-- NEW: Password Field -->
+        <input
+          type="password"
+          id="studentPassword"
+          placeholder="Enter your password"
+          required
+        />
+
+        <button onclick="startQuiz()">Secure Login & Play!</button>
+        <p id="setupMessage" style="color: red; font-weight: bold"></p>
       </div>
 
-      <!-- Step 2: The Question Appears Here -->
       <div id="quizArea" class="hidden">
         <h3 id="questionText">Loading question...</h3>
-
         <button class="option-btn" onclick="submitAnswer('A')" id="btnA">
           A
         </button>
@@ -105,7 +105,6 @@
         <button class="option-btn" onclick="submitAnswer('D')" id="btnD">
           D
         </button>
-
         <p
           id="resultMessage"
           style="font-weight: bold; font-size: 18px; margin-top: 15px"
@@ -129,30 +128,48 @@
         const select = document.getElementById("subject");
         select.innerHTML =
           '<option value="" disabled selected>Loading...</option>';
-
         if (!grade) return;
         const response = await fetch(`/api/subjects/${grade}`);
         const subjects = await response.json();
-
         select.innerHTML =
           '<option value="" disabled selected>Select Subject</option>';
-        subjects.forEach((sub) => {
-          select.innerHTML += `<option value="${sub.name}">${sub.name}</option>`;
-        });
+        subjects.forEach(
+          (sub) =>
+            (select.innerHTML += `<option value="${sub.name}">${sub.name}</option>`),
+        );
       }
 
       async function startQuiz() {
         const name = document.getElementById("studentName").value;
         const grade = document.getElementById("grade").value;
         const subject = document.getElementById("subject").value;
+        const password = document.getElementById("studentPassword").value;
 
-        if (!name) {
+        if (!name || !grade || !subject || !password) {
           document.getElementById("setupMessage").innerText =
-            "Please enter your name!";
+            "Please fill out all fields!";
           return;
         }
 
-        // Ask Python for a question
+        // 1. SECURE LOGIN CHECK
+        const loginRes = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: name,
+            role: "Student",
+            grade_class: grade,
+            password: password,
+          }),
+        });
+        const loginData = await loginRes.json();
+
+        if (!loginData.success) {
+          document.getElementById("setupMessage").innerText = loginData.message;
+          return; // Stop if wrong password!
+        }
+
+        // 2. FETCH QUESTION
         const response = await fetch(
           `/api/get_question?grade_class=${grade}&subject=${subject}`,
         );
@@ -160,17 +177,15 @@
 
         if (response.status === 404) {
           document.getElementById("setupMessage").innerText =
-            "No questions found! Ask a parent to add some.";
+            "No questions found for this subject!";
           return;
         }
 
-        // Hide setup, show quiz
         document.getElementById("setupArea").classList.add("hidden");
         document.getElementById("quizArea").classList.remove("hidden");
         document.getElementById("nextBtn").classList.add("hidden");
         document.getElementById("resultMessage").innerText = "";
 
-        // Put the question on the screen
         currentQuestionId = questionData.id;
         document.getElementById("questionText").innerText =
           questionData.question_text;
@@ -186,27 +201,19 @@
 
       async function submitAnswer(selectedOption) {
         const studentName = document.getElementById("studentName").value;
-
-        const payload = {
-          student_name: studentName,
-          question_id: currentQuestionId,
-          selected_option: selectedOption,
-        };
-
-        // Send answer to Python to check
         const response = await fetch("/api/check_answer", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({
+            student_name: studentName,
+            question_id: currentQuestionId,
+            selected_option: selectedOption,
+          }),
         });
-
         const result = await response.json();
-
         const msgElement = document.getElementById("resultMessage");
         msgElement.innerText = result.message;
         msgElement.style.color = result.correct ? "green" : "red";
-
-        // Show the next question button
         document.getElementById("nextBtn").classList.remove("hidden");
       }
     </script>

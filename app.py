@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql.expression import func
 import os
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
@@ -16,6 +17,7 @@ db = SQLAlchemy(app)
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False) # NEW FIELD!
     role = db.Column(db.String(20), nullable=False) 
     grade_class = db.Column(db.Integer, nullable=True) 
     reward_points = db.Column(db.Integer, default=0)
@@ -48,25 +50,31 @@ class Subject(db.Model):
 def home():
     return render_template('index.html')
 
-# 2. The API to Register Users
+# 2. The API to Register Users (UPGRADED WITH HASHING)
 @app.route('/api/register', methods=['POST'])
 def register():
-    # Grab the JSON data sent from JavaScript
     data = request.get_json()
     
-    # Create a new User object
+    # 1. Check if user already exists
+    existing_user = User.query.filter_by(name=data['name'], role=data['role'], grade_class=data.get('grade_class')).first()
+    if existing_user:
+        return jsonify({"success": False, "message": "User already exists!"}), 400
+
+    # 2. Hash the password!
+    hashed_pw = generate_password_hash(data['password'])
+    
+    # 3. Save to database
     new_user = User(
         name=data['name'],
+        password_hash=hashed_pw,
         role=data['role'],
         grade_class=data.get('grade_class')
     )
     
-    # Save it to the database
     db.session.add(new_user)
     db.session.commit()
     
-    # Send a success message back to the website
-    return jsonify({"message": f"Success! Welcome to Study Buddy, {data['name']}!"}), 201
+    return jsonify({"success": True, "message": f"Success! Welcome {data['name']}!"}), 201
 
 # 3. Show the Parent Dashboard
 @app.route('/parent')
@@ -268,8 +276,27 @@ def delete_subject(sub_id):
         return jsonify({"success": True})
     return jsonify({"success": False}), 404
 
+# 17. The Secure Login API
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    
+    # Find the user
+    user = User.query.filter_by(
+        name=data['name'], 
+        role=data['role'], 
+        grade_class=data.get('grade_class')
+    ).first()
+    
+    # Check if user exists AND if the password matches the hash
+    if user and check_password_hash(user.password_hash, data['password']):
+        return jsonify({"success": True, "message": "Login successful!"})
+    else:
+        return jsonify({"success": False, "message": "Invalid Name, Class, or Password!"}), 401
+
 # --- AUTO-BUILD DATABASE & DEFAULTS ---
 with app.app_context():
+    db.drop_all()
     db.create_all()
     
     # If the Subject table is completely empty, auto-fill the CBSE defaults!

@@ -42,6 +42,9 @@
         cursor: pointer;
         font-weight: bold;
       }
+      .hidden {
+        display: none;
+      }
       .row {
         display: flex;
         justify-content: space-between;
@@ -67,41 +70,31 @@
     </style>
   </head>
   <body>
-    <!-- Section 1: Manage Subjects (CRUD) -->
-    <div class="card">
-      <h2>📚 Manage Subjects</h2>
-      <div class="row">
-        <select id="manageClassSelect" onchange="loadManageSubjects()">
-          <option value="" disabled selected>Select Class</option>
-          <option value="1">Class 1</option>
-          <option value="2">Class 2</option>
-          <option value="3">Class 3</option>
-          <option value="4">Class 4</option>
-          <option value="5">Class 5</option>
-          <option value="6">Class 6</option>
-          <option value="7">Class 7</option>
-          <option value="8">Class 8</option>
-        </select>
-        <input type="text" id="newSubjectName" placeholder="New Subject Name" />
-      </div>
-      <button class="btn-add" onclick="addSubject()">
-        Add Subject to Class
-      </button>
-      <p id="subMsg" style="font-weight: bold"></p>
-
-      <div id="subjectList" style="text-align: left; margin-top: 10px">
-        <p style="color: gray; text-align: center">
-          Select a class to view subjects.
-        </p>
-      </div>
+    <!-- SECURE LOGIN SCREEN -->
+    <div id="loginArea" class="card">
+      <h2>Parent Login 🔒</h2>
+      <input
+        type="text"
+        id="parentName"
+        placeholder="Enter your Parent Name"
+        required
+      />
+      <input
+        type="password"
+        id="parentPassword"
+        placeholder="Enter your Password"
+        required
+      />
+      <button class="btn-pub" onclick="parentLogin()">Access Dashboard</button>
+      <p id="loginMsg" style="color: red; font-weight: bold"></p>
     </div>
 
-    <!-- Section 2: Publish a Question -->
-    <div class="card">
-      <h2>📝 Publish a Question</h2>
-      <form id="questionForm">
+    <!-- PROTECTED DASHBOARD -->
+    <div id="dashboardArea" class="hidden">
+      <div class="card">
+        <h2>📚 Manage Subjects</h2>
         <div class="row">
-          <select id="qClass" required onchange="loadQuestionSubjects()">
+          <select id="manageClassSelect" onchange="loadManageSubjects()">
             <option value="" disabled selected>Select Class</option>
             <option value="1">Class 1</option>
             <option value="2">Class 2</option>
@@ -112,52 +105,100 @@
             <option value="7">Class 7</option>
             <option value="8">Class 8</option>
           </select>
-
-          <select id="qSubject" required>
-            <option value="" disabled selected>Select Subject</option>
-          </select>
+          <input
+            type="text"
+            id="newSubjectName"
+            placeholder="New Subject Name"
+          />
         </div>
+        <button class="btn-add" onclick="addSubject()">Add Subject</button>
+        <p id="subMsg" style="font-weight: bold"></p>
+        <div id="subjectList" style="text-align: left; margin-top: 10px"></div>
+      </div>
 
-        <textarea
-          id="questionText"
-          rows="3"
-          placeholder="Type the question here..."
-          required
-        ></textarea>
-        <input type="text" id="optA" placeholder="Option A" required />
-        <input type="text" id="optB" placeholder="Option B" required />
-        <input type="text" id="optC" placeholder="Option C" required />
-        <input type="text" id="optD" placeholder="Option D" required />
-
-        <select id="correctOpt" required>
-          <option value="" disabled selected>Which option is correct?</option>
-          <option value="A">Option A</option>
-          <option value="B">Option B</option>
-          <option value="C">Option C</option>
-          <option value="D">Option D</option>
-        </select>
-        <button type="submit" class="btn-pub">Publish to Study Buddy</button>
-      </form>
-      <p id="qMsg" style="color: green; font-weight: bold"></p>
+      <div class="card">
+        <h2>📝 Publish a Question</h2>
+        <form id="questionForm">
+          <div class="row">
+            <select id="qClass" required onchange="loadQuestionSubjects()">
+              <option value="" disabled selected>Select Class</option>
+              <option value="1">Class 1</option>
+              <option value="2">Class 2</option>
+              <option value="3">Class 3</option>
+              <option value="4">Class 4</option>
+              <option value="5">Class 5</option>
+              <option value="6">Class 6</option>
+              <option value="7">Class 7</option>
+              <option value="8">Class 8</option>
+            </select>
+            <select id="qSubject" required>
+              <option value="" disabled selected>Select Subject</option>
+            </select>
+          </div>
+          <textarea
+            id="questionText"
+            rows="3"
+            placeholder="Type the question here..."
+            required
+          ></textarea>
+          <input type="text" id="optA" placeholder="Option A" required />
+          <input type="text" id="optB" placeholder="Option B" required />
+          <input type="text" id="optC" placeholder="Option C" required />
+          <input type="text" id="optD" placeholder="Option D" required />
+          <select id="correctOpt" required>
+            <option value="" disabled selected>Which option is correct?</option>
+            <option value="A">Option A</option>
+            <option value="B">Option B</option>
+            <option value="C">Option C</option>
+            <option value="D">Option D</option>
+          </select>
+          <button type="submit" class="btn-pub">Publish Question</button>
+        </form>
+        <p id="qMsg" style="color: green; font-weight: bold"></p>
+      </div>
     </div>
 
     <script>
-      // --- Subject Manager Logic ---
+      // --- SECURE LOGIN LOGIC ---
+      async function parentLogin() {
+        const name = document.getElementById("parentName").value;
+        const password = document.getElementById("parentPassword").value;
+
+        if (!name || !password) {
+          document.getElementById("loginMsg").innerText =
+            "Please fill out both fields!";
+          return;
+        }
+
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: name,
+            password: password,
+            role: "Parent",
+          }), // Note: Parents have no class!
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById("loginArea").classList.add("hidden");
+          document.getElementById("dashboardArea").classList.remove("hidden");
+        } else {
+          document.getElementById("loginMsg").innerText = data.message;
+        }
+      }
+
+      // --- EXISTING DASHBOARD LOGIC ---
       async function loadManageSubjects() {
         const grade = document.getElementById("manageClassSelect").value;
         if (!grade) return;
-
         const response = await fetch(`/api/subjects/${grade}`);
         const subjects = await response.json();
-
         const list = document.getElementById("subjectList");
         list.innerHTML = "";
         subjects.forEach((sub) => {
-          list.innerHTML += `
-                    <div class="subject-item">
-                        <span>${sub.name}</span>
-                        <button class="btn-del" onclick="deleteSubject(${sub.id})">❌</button>
-                    </div>`;
+          list.innerHTML += `<div class="subject-item"><span>${sub.name}</span><button class="btn-del" onclick="deleteSubject(${sub.id})">❌</button></div>`;
         });
       }
 
@@ -165,23 +206,20 @@
         const grade = document.getElementById("manageClassSelect").value;
         const name = document.getElementById("newSubjectName").value;
         if (!grade || !name) return;
-
         const response = await fetch("/api/add_subject", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ grade_class: grade, name: name }),
         });
         const result = await response.json();
-
         document.getElementById("subMsg").innerText = result.message;
         document.getElementById("subMsg").style.color = result.success
           ? "green"
           : "red";
-
         if (result.success) {
           document.getElementById("newSubjectName").value = "";
           loadManageSubjects();
-          loadQuestionSubjects(); // Update the dropdown below too!
+          loadQuestionSubjects();
         }
       }
 
@@ -193,17 +231,14 @@
         }
       }
 
-      // --- Question Publisher Logic ---
       async function loadQuestionSubjects() {
         const grade = document.getElementById("qClass").value;
         const select = document.getElementById("qSubject");
         select.innerHTML =
           '<option value="" disabled selected>Loading...</option>';
-
         if (!grade) return;
         const response = await fetch(`/api/subjects/${grade}`);
         const subjects = await response.json();
-
         select.innerHTML =
           '<option value="" disabled selected>Select Subject</option>';
         subjects.forEach((sub) => {
@@ -233,8 +268,6 @@
           const result = await response.json();
           document.getElementById("qMsg").innerText = result.message;
           document.getElementById("questionForm").reset();
-          document.getElementById("qSubject").innerHTML =
-            '<option value="" disabled selected>Select Subject</option>';
         });
     </script>
   </body>

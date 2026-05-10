@@ -50,7 +50,7 @@
     <div class="card">
       <h2>🛍️ Rewards Display Window</h2>
 
-      <!-- Login Area (Now with Class Selector) -->
+      <!-- Login Area -->
       <div id="loginArea">
         <input
           type="text"
@@ -71,9 +71,15 @@
           <option value="8">Class 8</option>
         </select>
 
-        <button class="login-btn" onclick="loginToShop()">
-          Check My Points
-        </button>
+        <!-- NEW: Password Field -->
+        <input
+          type="password"
+          id="studentPassword"
+          placeholder="Enter your password"
+          required
+        />
+
+        <button class="login-btn" onclick="loginToShop()">Secure Login</button>
         <p id="loginMessage" style="color: red; font-weight: bold"></p>
       </div>
 
@@ -86,9 +92,7 @@
           See something you like? Go ask your Parent to claim it!
         </p>
 
-        <div id="itemList">
-          <!-- Items will be loaded here by JavaScript -->
-        </div>
+        <div id="itemList"></div>
 
         <button
           style="
@@ -111,26 +115,40 @@
       async function loginToShop() {
         const name = document.getElementById("studentName").value;
         const studentClass = document.getElementById("studentClass").value;
+        const password = document.getElementById("studentPassword").value;
 
-        if (!name || !studentClass) {
+        if (!name || !studentClass || !password) {
           document.getElementById("loginMessage").innerText =
-            "Please enter your name and class!";
+            "Please fill out all fields!";
           return;
         }
 
-        // 1. Get Balance from Python (Sending both Name and Class)
+        // 1. SECURE LOGIN CHECK
+        const loginRes = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: name,
+            role: "Student",
+            grade_class: studentClass,
+            password: password,
+          }),
+        });
+        const loginData = await loginRes.json();
+
+        if (!loginData.success) {
+          document.getElementById("loginMessage").innerText = loginData.message;
+          return; // STOP! Wrong password!
+        }
+
+        // 2. If password is correct, fetch the balance!
         const balanceRes = await fetch(
           `/api/balance?name=${name}&grade=${studentClass}`,
         );
-        if (balanceRes.status === 404) {
-          document.getElementById("loginMessage").innerText =
-            "Student not found in that class!";
-          return;
-        }
         const balanceData = await balanceRes.json();
         document.getElementById("pointBalance").innerText = balanceData.points;
 
-        // 2. Load Commodities from Python
+        // 3. Load Commodities
         const itemRes = await fetch("/api/commodities");
         const items = await itemRes.json();
 
@@ -144,7 +162,7 @@
                 </div>`;
         });
 
-        // 3. Hide login, show shop
+        // 4. Hide login, show shop
         document.getElementById("loginArea").classList.add("hidden");
         document.getElementById("shopArea").classList.remove("hidden");
       }

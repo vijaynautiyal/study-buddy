@@ -2,7 +2,6 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Study Buddy - Sign Up</title>
     <style>
       body {
@@ -35,9 +34,6 @@
         cursor: pointer;
         font-weight: bold;
       }
-      button:hover {
-        background-color: #218838;
-      }
       .hidden {
         display: none;
       }
@@ -55,13 +51,20 @@
           required
         />
 
+        <!-- NEW: Password Field -->
+        <input
+          type="password"
+          id="password"
+          placeholder="Create a password"
+          required
+        />
+
         <select id="role" required>
           <option value="" disabled selected>Who are you?</option>
           <option value="Student">I am a Student</option>
           <option value="Parent">I am a Parent</option>
         </select>
 
-        <!-- This only shows up if they pick "Student" -->
         <select id="grade" class="hidden">
           <option value="" disabled selected>Select your Class</option>
           <option value="1">Class 1</option>
@@ -74,14 +77,13 @@
           <option value="8">Class 8</option>
         </select>
 
-        <button type="submit">Sign Up</button>
+        <button type="submit">Secure Sign Up</button>
       </form>
 
-      <p id="message" style="color: blue"></p>
+      <p id="message" style="font-weight: bold"></p>
     </div>
 
     <script>
-      // Logic to show/hide the Class dropdown
       const roleSelect = document.getElementById("role");
       const gradeSelect = document.getElementById("grade");
 
@@ -95,19 +97,18 @@
         }
       });
 
-      // Logic to send data to Python
       document
         .getElementById("signupForm")
         .addEventListener("submit", async function (e) {
-          e.preventDefault(); // Stop page from reloading
+          e.preventDefault();
 
           const userData = {
             name: document.getElementById("name").value,
+            password: document.getElementById("password").value, // SENDING PASSWORD
             role: document.getElementById("role").value,
             grade_class: document.getElementById("grade").value || null,
           };
 
-          // Send to our Python API
           const response = await fetch("/api/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -115,8 +116,11 @@
           });
 
           const result = await response.json();
-          document.getElementById("message").innerText = result.message;
-          document.getElementById("signupForm").reset();
+          const msgEl = document.getElementById("message");
+          msgEl.innerText = result.message;
+          msgEl.style.color = result.success ? "blue" : "red";
+
+          if (result.success) document.getElementById("signupForm").reset();
         });
     </script>
   </body>
