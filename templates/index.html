@@ -2,30 +2,37 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Study Buddy - Sign Up</title>
+    <title>Welcome to Study Buddy</title>
     <style>
       body {
         font-family: Arial, sans-serif;
         text-align: center;
         padding: 50px;
         background-color: #f4f4f9;
+        margin: 0;
       }
       .card {
         background: white;
-        padding: 20px;
-        border-radius: 10px;
-        width: 300px;
+        padding: 30px;
+        border-radius: 12px;
+        width: 350px;
         margin: 0 auto;
-        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.1);
+      }
+      h2 {
+        color: #333;
+        margin-bottom: 20px;
       }
       input,
       select,
       button {
-        width: 90%;
-        padding: 10px;
+        width: 95%;
+        padding: 12px;
         margin: 10px 0;
-        border-radius: 5px;
+        border-radius: 6px;
         border: 1px solid #ccc;
+        font-size: 15px;
+        box-sizing: border-box;
       }
       button {
         background-color: #28a745;
@@ -33,31 +40,39 @@
         border: none;
         cursor: pointer;
         font-weight: bold;
+        transition: 0.3s;
+      }
+      button:hover {
+        background-color: #218838;
+      }
+      .toggle-link {
+        color: #007bff;
+        cursor: pointer;
+        text-decoration: underline;
+        font-size: 14px;
+        display: block;
+        margin-top: 15px;
       }
       .hidden {
         display: none;
       }
+      #message {
+        font-weight: bold;
+        margin-top: 15px;
+      }
     </style>
   </head>
   <body>
+    <h1>🎓 Study Buddy</h1>
+    <p>Master your subjects, earn your rewards.</p>
+
     <div class="card">
-      <h2>Join Study Buddy 🚀</h2>
+      <!-- Dynamic Header -->
+      <h2 id="formTitle">Secure Login</h2>
 
-      <form id="signupForm">
-        <input
-          type="text"
-          id="name"
-          placeholder="Enter your full name"
-          required
-        />
-
-        <!-- NEW: Password Field -->
-        <input
-          type="password"
-          id="password"
-          placeholder="Create a password"
-          required
-        />
+      <form id="authForm">
+        <input type="text" id="name" placeholder="Full Name" required />
+        <input type="password" id="password" placeholder="Password" required />
 
         <select id="role" required>
           <option value="" disabled selected>Who are you?</option>
@@ -77,16 +92,26 @@
           <option value="8">Class 8</option>
         </select>
 
-        <button type="submit">Secure Sign Up</button>
+        <button type="submit" id="submitBtn">Login</button>
       </form>
 
-      <p id="message" style="font-weight: bold"></p>
+      <p id="message"></p>
+
+      <!-- Toggle between Login and Signup -->
+      <span class="toggle-link" id="toggleLink" onclick="toggleMode()"
+        >Don't have an account? Sign Up here.</span
+      >
     </div>
 
     <script>
+      let isLoginMode = true;
+      const formTitle = document.getElementById("formTitle");
+      const submitBtn = document.getElementById("submitBtn");
+      const toggleLink = document.getElementById("toggleLink");
       const roleSelect = document.getElementById("role");
       const gradeSelect = document.getElementById("grade");
 
+      // Show/Hide Grade selector for Students
       roleSelect.addEventListener("change", function () {
         if (this.value === "Student") {
           gradeSelect.classList.remove("hidden");
@@ -97,30 +122,61 @@
         }
       });
 
+      // Switch between Login and Signup
+      function toggleMode() {
+        isLoginMode = !isLoginMode;
+        if (isLoginMode) {
+          formTitle.innerText = "Secure Login";
+          submitBtn.innerText = "Login";
+          toggleLink.innerText = "Don't have an account? Sign Up here.";
+        } else {
+          formTitle.innerText = "Join Study Buddy";
+          submitBtn.innerText = "Create Account";
+          toggleLink.innerText = "Already have an account? Login here.";
+        }
+        document.getElementById("message").innerText = "";
+      }
+
       document
-        .getElementById("signupForm")
+        .getElementById("authForm")
         .addEventListener("submit", async function (e) {
           e.preventDefault();
+          const msgEl = document.getElementById("message");
+          msgEl.innerText = "Processing...";
+          msgEl.style.color = "gray";
 
-          const userData = {
+          const payload = {
             name: document.getElementById("name").value,
-            password: document.getElementById("password").value, // SENDING PASSWORD
+            password: document.getElementById("password").value,
             role: document.getElementById("role").value,
             grade_class: document.getElementById("grade").value || null,
           };
 
-          const response = await fetch("/api/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(userData),
-          });
+          // Decide which API to call based on the mode
+          const endpoint = isLoginMode ? "/api/login" : "/api/register";
 
-          const result = await response.json();
-          const msgEl = document.getElementById("message");
-          msgEl.innerText = result.message;
-          msgEl.style.color = result.success ? "blue" : "red";
+          try {
+            const response = await fetch(endpoint, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
 
-          if (result.success) document.getElementById("signupForm").reset();
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+              msgEl.innerText = "Success! Redirecting...";
+              msgEl.style.color = "green";
+              // Whisks the user to the dashboard Python told us about!
+              window.location.href = result.redirect;
+            } else {
+              msgEl.innerText = result.message || "Error occurred.";
+              msgEl.style.color = "red";
+            }
+          } catch (error) {
+            msgEl.innerText = "Connection failed!";
+            msgEl.style.color = "red";
+          }
         });
     </script>
   </body>

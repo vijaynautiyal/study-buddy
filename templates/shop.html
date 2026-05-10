@@ -2,169 +2,147 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Study Buddy - Rewards Window</title>
+    <title>Study Buddy - Rewards Shop</title>
     <style>
       body {
         font-family: Arial, sans-serif;
-        text-align: center;
-        padding: 20px;
+        margin: 0;
         background-color: #e8f5e9;
+        text-align: center;
+      }
+      .navbar {
+        background-color: #343a40;
+        padding: 15px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .navbar a {
+        color: white;
+        text-decoration: none;
+        padding: 10px;
+        margin: 0 5px;
+        background: #495057;
+        border-radius: 5px;
       }
       .card {
         background: white;
         padding: 20px;
         border-radius: 10px;
         width: 450px;
-        margin: 0 auto;
+        margin: 30px auto;
         box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
       }
-      input,
-      select,
-      button {
-        width: 90%;
-        padding: 10px;
+      .point-display {
+        color: #28a745;
+        font-size: 24px;
         margin: 10px 0;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-      }
-      .login-btn {
-        background-color: #28a745;
-        color: white;
-        border: none;
-        cursor: pointer;
-        font-weight: bold;
-      }
-      .hidden {
-        display: none;
       }
       .store-item {
         border: 2px dashed #28a745;
-        padding: 10px;
-        margin: 10px 0;
+        padding: 15px;
+        margin: 15px 0;
         border-radius: 8px;
         background-color: #fafafa;
+        text-align: left;
+      }
+      .store-item h4 {
+        margin: 0;
+        color: #333;
+      }
+      .store-item p {
+        margin: 5px 0;
+        color: #666;
+        font-weight: bold;
+      }
+      .info-text {
+        color: #6c757d;
+        font-size: 14px;
+        line-height: 1.4;
       }
     </style>
   </head>
   <body>
+    <!-- Navigation Bar -->
+    <div class="navbar">
+      <a href="/student_dashboard">⬅️ Back to Dashboard</a>
+      <span>Logged in as: <strong>{{ session.name }}</strong></span>
+      <a href="/logout" style="background: #dc3545">Logout</a>
+    </div>
+
     <div class="card">
-      <h2>🛍️ Rewards Display Window</h2>
+      <h2>🛍️ Rewards Shop</h2>
 
-      <!-- Login Area -->
-      <div id="loginArea">
-        <input
-          type="text"
-          id="studentName"
-          placeholder="Enter your student name"
-          required
-        />
-
-        <select id="studentClass">
-          <option value="" disabled selected>Select your Class</option>
-          <option value="1">Class 1</option>
-          <option value="2">Class 2</option>
-          <option value="3">Class 3</option>
-          <option value="4">Class 4</option>
-          <option value="5">Class 5</option>
-          <option value="6">Class 6</option>
-          <option value="7">Class 7</option>
-          <option value="8">Class 8</option>
-        </select>
-
-        <!-- NEW: Password Field -->
-        <input
-          type="password"
-          id="studentPassword"
-          placeholder="Enter your password"
-          required
-        />
-
-        <button class="login-btn" onclick="loginToShop()">Secure Login</button>
-        <p id="loginMessage" style="color: red; font-weight: bold"></p>
+      <div class="point-display">
+        My Balance: <span id="pointBalance">...</span> 🌟
       </div>
 
-      <!-- Display Area -->
-      <div id="shopArea" class="hidden">
-        <h3 style="color: #28a745">
-          My Balance: <span id="pointBalance">0</span> Points 🌟
-        </h3>
-        <p style="color: #666; font-size: 14px">
-          See something you like? Go ask your Parent to claim it!
-        </p>
-
-        <div id="itemList"></div>
-
-        <button
-          style="
-            margin-top: 20px;
-            background-color: #6c757d;
-            color: white;
-            border: none;
-            cursor: pointer;
-            padding: 10px;
-            border-radius: 5px;
-          "
-          onclick="location.reload()"
+      <p class="info-text">
+        Below are the rewards your parents have added. <br />
+        <strong
+          >To claim an item, please show your points to your parent!</strong
         >
-          Log Out
-        </button>
+      </p>
+
+      <hr />
+
+      <div id="itemList">
+        <p style="color: gray">Loading rewards list...</p>
       </div>
     </div>
 
     <script>
-      async function loginToShop() {
-        const name = document.getElementById("studentName").value;
-        const studentClass = document.getElementById("studentClass").value;
-        const password = document.getElementById("studentPassword").value;
+      // Use Session variables from Flask
+      const STUDENT_NAME = "{{ session.name }}";
+      const GRADE_CLASS = "{{ session.grade_class }}";
 
-        if (!name || !studentClass || !password) {
-          document.getElementById("loginMessage").innerText =
-            "Please fill out all fields!";
-          return;
+      // Run this immediately when the page loads
+      window.onload = async function () {
+        loadShopData();
+      };
+
+      async function loadShopData() {
+        // 1. Fetch Student Balance
+        try {
+          const balanceRes = await fetch(
+            `/api/balance?name=${STUDENT_NAME}&grade=${GRADE_CLASS}`,
+          );
+          if (balanceRes.ok) {
+            const balanceData = await balanceRes.json();
+            document.getElementById("pointBalance").innerText =
+              balanceData.points;
+          }
+        } catch (err) {
+          console.error("Error fetching balance:", err);
         }
 
-        // 1. SECURE LOGIN CHECK
-        const loginRes = await fetch("/api/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: name,
-            role: "Student",
-            grade_class: studentClass,
-            password: password,
-          }),
-        });
-        const loginData = await loginRes.json();
+        // 2. Fetch Available Commodities
+        try {
+          const itemRes = await fetch("/api/commodities");
+          const items = await itemRes.json();
 
-        if (!loginData.success) {
-          document.getElementById("loginMessage").innerText = loginData.message;
-          return; // STOP! Wrong password!
+          const itemList = document.getElementById("itemList");
+          itemList.innerHTML = "";
+
+          if (items.length === 0) {
+            itemList.innerHTML =
+              "<p style='color:gray;'>Your parents haven't added any rewards yet.</p>";
+            return;
+          }
+
+          items.forEach((item) => {
+            itemList.innerHTML += `
+                    <div class="store-item">
+                        <h4>🎁 ${item.name}</h4>
+                        <p>Cost: ${item.cost} Points</p>
+                    </div>`;
+          });
+        } catch (err) {
+          console.error("Error fetching items:", err);
+          document.getElementById("itemList").innerText =
+            "Failed to load rewards.";
         }
-
-        // 2. If password is correct, fetch the balance!
-        const balanceRes = await fetch(
-          `/api/balance?name=${name}&grade=${studentClass}`,
-        );
-        const balanceData = await balanceRes.json();
-        document.getElementById("pointBalance").innerText = balanceData.points;
-
-        // 3. Load Commodities
-        const itemRes = await fetch("/api/commodities");
-        const items = await itemRes.json();
-
-        const itemList = document.getElementById("itemList");
-        itemList.innerHTML = "";
-        items.forEach((item) => {
-          itemList.innerHTML += `
-                <div class="store-item">
-                    <h4>${item.name}</h4>
-                    <p><strong>Cost: ${item.cost} Points</strong></p>
-                </div>`;
-        });
-
-        // 4. Hide login, show shop
-        document.getElementById("loginArea").classList.add("hidden");
-        document.getElementById("shopArea").classList.remove("hidden");
       }
     </script>
   </body>

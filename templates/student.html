@@ -2,45 +2,64 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Study Buddy - Student Arena</title>
+    <title>Study Buddy - Quiz Arena</title>
     <style>
       body {
         font-family: Arial, sans-serif;
-        text-align: center;
-        padding: 20px;
+        margin: 0;
         background-color: #fff3cd;
+        text-align: center;
+      }
+      .navbar {
+        background-color: #343a40;
+        padding: 15px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .navbar a {
+        color: white;
+        text-decoration: none;
+        padding: 10px;
+        margin: 0 5px;
+        background: #495057;
+        border-radius: 5px;
       }
       .card {
         background: white;
         padding: 20px;
         border-radius: 10px;
-        width: 400px;
-        margin: 0 auto;
+        width: 450px;
+        margin: 30px auto;
         box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
       }
-      input,
       select,
       button {
         width: 90%;
-        padding: 10px;
+        padding: 12px;
         margin: 10px 0;
         border-radius: 5px;
         border: 1px solid #ccc;
+        font-size: 16px;
       }
-      button {
+      .start-btn {
         background-color: #ffc107;
         color: black;
-        border: none;
-        cursor: pointer;
         font-weight: bold;
-        font-size: 16px;
+        cursor: pointer;
+        border: none;
       }
       .option-btn {
         background-color: #17a2b8;
         color: white;
         display: block;
-        margin: 5px auto;
+        margin: 8px auto;
         width: 95%;
+        cursor: pointer;
+      }
+      .option-btn:hover {
+        background-color: #138496;
       }
       .hidden {
         display: none;
@@ -50,49 +69,41 @@
         border-top: 2px solid #eee;
         padding-top: 20px;
       }
+      .result {
+        font-weight: bold;
+        font-size: 20px;
+        margin-top: 15px;
+      }
     </style>
   </head>
   <body>
+    <!-- Navigation Bar -->
+    <div class="navbar">
+      <a href="/student_dashboard">⬅️ Back to Dashboard</a>
+      <span
+        >Logged in as: <strong>{{ session.name }}</strong> (Class {{
+        session.grade_class }})</span
+      >
+      <a href="/logout" style="background: #dc3545">Logout</a>
+    </div>
+
     <div class="card">
-      <h2>🎮 Student Arena</h2>
+      <h2>🎮 Quiz Arena</h2>
 
-      <!-- SECURE SETUP AREA -->
+      <!-- Setup Area (No login needed anymore!) -->
       <div id="setupArea">
-        <input
-          type="text"
-          id="studentName"
-          placeholder="Enter your registered name"
-          required
-        />
-        <select id="grade" onchange="loadStudentSubjects()">
-          <option value="" disabled selected>Select your Class</option>
-          <option value="1">Class 1</option>
-          <option value="2">Class 2</option>
-          <option value="3">Class 3</option>
-          <option value="4">Class 4</option>
-          <option value="5">Class 5</option>
-          <option value="6">Class 6</option>
-          <option value="7">Class 7</option>
-          <option value="8">Class 8</option>
+        <p>Select a subject to start your challenge:</p>
+        <select id="subjectSelect">
+          <option value="" disabled selected>Loading subjects...</option>
         </select>
-        <select id="subject">
-          <option value="" disabled selected>Select Subject</option>
-        </select>
-
-        <!-- NEW: Password Field -->
-        <input
-          type="password"
-          id="studentPassword"
-          placeholder="Enter your password"
-          required
-        />
-
-        <button onclick="startQuiz()">Secure Login & Play!</button>
-        <p id="setupMessage" style="color: red; font-weight: bold"></p>
+        <button class="start-btn" onclick="startQuiz()">Start Playing!</button>
+        <p id="setupMessage" style="color: red"></p>
       </div>
 
+      <!-- The Quiz Engine -->
       <div id="quizArea" class="hidden">
-        <h3 id="questionText">Loading question...</h3>
+        <h3 id="questionText">Loading...</h3>
+
         <button class="option-btn" onclick="submitAnswer('A')" id="btnA">
           A
         </button>
@@ -105,87 +116,66 @@
         <button class="option-btn" onclick="submitAnswer('D')" id="btnD">
           D
         </button>
-        <p
-          id="resultMessage"
-          style="font-weight: bold; font-size: 18px; margin-top: 15px"
-        ></p>
+
+        <p id="resultMessage" class="result"></p>
         <button
           onclick="startQuiz()"
           id="nextBtn"
           class="hidden"
-          style="background-color: #28a745; color: white"
+          style="background-color: #28a745; color: white; border: none"
         >
-          Next Question
+          Next Question ➡️
         </button>
       </div>
     </div>
 
     <script>
+      // Magic Session Data from Python
+      const STUDENT_NAME = "{{ session.name }}";
+      const GRADE_CLASS = "{{ session.grade_class }}";
+
       let currentQuestionId = null;
 
-      async function loadStudentSubjects() {
-        const grade = document.getElementById("grade").value;
-        const select = document.getElementById("subject");
-        select.innerHTML =
-          '<option value="" disabled selected>Loading...</option>';
-        if (!grade) return;
-        const response = await fetch(`/api/subjects/${grade}`);
+      // Automatically load subjects for the student's class on page load
+      window.onload = async function () {
+        const response = await fetch(`/api/subjects/${GRADE_CLASS}`);
         const subjects = await response.json();
+        const select = document.getElementById("subjectSelect");
+
         select.innerHTML =
-          '<option value="" disabled selected>Select Subject</option>';
-        subjects.forEach(
-          (sub) =>
-            (select.innerHTML += `<option value="${sub.name}">${sub.name}</option>`),
-        );
-      }
+          '<option value="" disabled selected>Choose a Subject</option>';
+        subjects.forEach((sub) => {
+          select.innerHTML += `<option value="${sub.name}">${sub.name}</option>`;
+        });
+      };
 
       async function startQuiz() {
-        const name = document.getElementById("studentName").value;
-        const grade = document.getElementById("grade").value;
-        const subject = document.getElementById("subject").value;
-        const password = document.getElementById("studentPassword").value;
-
-        if (!name || !grade || !subject || !password) {
+        const subject = document.getElementById("subjectSelect").value;
+        if (!subject) {
           document.getElementById("setupMessage").innerText =
-            "Please fill out all fields!";
+            "Please pick a subject first!";
           return;
         }
 
-        // 1. SECURE LOGIN CHECK
-        const loginRes = await fetch("/api/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: name,
-            role: "Student",
-            grade_class: grade,
-            password: password,
-          }),
-        });
-        const loginData = await loginRes.json();
-
-        if (!loginData.success) {
-          document.getElementById("setupMessage").innerText = loginData.message;
-          return; // Stop if wrong password!
-        }
-
-        // 2. FETCH QUESTION
+        // Fetch a random question for this Class and Subject
         const response = await fetch(
-          `/api/get_question?grade_class=${grade}&subject=${subject}`,
+          `/api/get_question?grade_class=${GRADE_CLASS}&subject=${subject}`,
         );
         const questionData = await response.json();
 
         if (response.status === 404) {
           document.getElementById("setupMessage").innerText =
-            "No questions found for this subject!";
+            "No questions found for this subject yet!";
           return;
         }
 
+        // UI Transitions
         document.getElementById("setupArea").classList.add("hidden");
         document.getElementById("quizArea").classList.remove("hidden");
         document.getElementById("nextBtn").classList.add("hidden");
         document.getElementById("resultMessage").innerText = "";
 
+        // Populate Question Data
         currentQuestionId = questionData.id;
         document.getElementById("questionText").innerText =
           questionData.question_text;
@@ -200,20 +190,25 @@
       }
 
       async function submitAnswer(selectedOption) {
-        const studentName = document.getElementById("studentName").value;
+        const payload = {
+          student_name: STUDENT_NAME,
+          question_id: currentQuestionId,
+          selected_option: selectedOption,
+        };
+
         const response = await fetch("/api/check_answer", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            student_name: studentName,
-            question_id: currentQuestionId,
-            selected_option: selectedOption,
-          }),
+          body: JSON.stringify(payload),
         });
+
         const result = await response.json();
         const msgElement = document.getElementById("resultMessage");
+
         msgElement.innerText = result.message;
         msgElement.style.color = result.correct ? "green" : "red";
+
+        // Show 'Next' button after answering
         document.getElementById("nextBtn").classList.remove("hidden");
       }
     </script>

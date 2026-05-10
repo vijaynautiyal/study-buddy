@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Student Dashboard</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background-color: #f4f4f9;
+        text-align: center;
+      }
+      .navbar {
+        background-color: #343a40;
+        padding: 15px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .navbar a {
+        color: white;
+        text-decoration: none;
+        padding: 10px;
+        margin: 0 5px;
+        background: #495057;
+        border-radius: 5px;
+      }
+      .navbar a.logout {
+        background: #dc3545;
+      }
+      .card {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        width: 400px;
+        margin: 40px auto;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      .big-btn {
+        display: block;
+        width: 90%;
+        padding: 15px;
+        margin: 15px auto;
+        background-color: #28a745;
+        color: white;
+        text-decoration: none;
+        font-size: 18px;
+        font-weight: bold;
+        border-radius: 8px;
+      }
+      .big-btn.shop {
+        background-color: #17a2b8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar">
+      <h2>Study Buddy 🎓</h2>
+      <div>
+        <span
+          >Welcome, {{ session.name }} (Class {{ session.grade_class }})</span
+        >
+        <a href="/logout" class="logout">Logout</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>My Dashboard</h2>
+      <p>What would you like to do today?</p>
+      <a href="/student" class="big-btn">🎮 Play Quiz Arena</a>
+      <a href="/shop" class="big-btn shop">🛍️ Visit Rewards Shop</a>
+    </div>
+  </body>
+</html>

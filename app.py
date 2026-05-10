@@ -1,10 +1,12 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql.expression import func
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
 app = Flask(__name__)
+app.secret_key = "super_secret_study_buddy_key" # This locks the session data!
 
 # --- DATABASE CONFIGURATION ---
 # This tells Python to look for a Render database FIRST. If it doesn't find one, it uses your local one!
@@ -46,40 +48,47 @@ class Subject(db.Model):
 # --- ROUTES ---
 
 # 1. Show the Webpage
+# Home Page (Login/Signup)
 @app.route('/')
 def home():
+    # If they already have a wristband, send them straight in!
+    if 'user_id' in session:
+        return redirect('/parent_dashboard' if session['role'] == 'Parent' else '/student_dashboard')
     return render_template('index.html')
 
-# 2. The API to Register Users (UPGRADED WITH HASHING)
+
+# 2. The API to Register Users
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.get_json()
-    
-    # 1. Check if user already exists
     existing_user = User.query.filter_by(name=data['name'], role=data['role'], grade_class=data.get('grade_class')).first()
     if existing_user:
         return jsonify({"success": False, "message": "User already exists!"}), 400
 
-    # 2. Hash the password!
     hashed_pw = generate_password_hash(data['password'])
-    
-    # 3. Save to database
-    new_user = User(
-        name=data['name'],
-        password_hash=hashed_pw,
-        role=data['role'],
-        grade_class=data.get('grade_class')
-    )
-    
+    new_user = User(name=data['name'], password_hash=hashed_pw, role=data['role'], grade_class=data.get('grade_class'))
     db.session.add(new_user)
     db.session.commit()
     
-    return jsonify({"success": True, "message": f"Success! Welcome {data['name']}!"}), 201
+    # Give them a wristband immediately!
+    session['user_id'] = new_user.id
+    session['name'] = new_user.name
+    session['role'] = new_user.role
+    session['grade_class'] = new_user.grade_class
+    
+    redirect_url = '/parent_dashboard' if new_user.role == 'Parent' else '/student_dashboard'
+    return jsonify({"success": True, "redirect": redirect_url})
 
 # 3. Show the Parent Dashboard
 @app.route('/parent')
+def parent_tool():
+    if 'role' not in session or session['role'] != 'Parent': return redirect('/')
+    return render_template('parent.html', session=session)
+
+@app.route('/parent_dashboard')
 def parent_dashboard():
-    return render_template('parent.html')
+    if 'role' not in session or session['role'] != 'Parent': return redirect('/')
+    return render_template('parent_dashboard.html', session=session)
 
 # 4. The API to Add a Question
 @app.route('/api/add_question', methods=['POST'])
@@ -104,8 +113,15 @@ def add_question():
 
 # 5. Show the Student Dashboard
 @app.route('/student')
+def student_arena():
+    if 'role' not in session or session['role'] != 'Student': return redirect('/')
+    return render_template('student.html', session=session)
+
+# Dashboards
+@app.route('/student_dashboard')
 def student_dashboard():
-    return render_template('student.html')
+    if 'role' not in session or session['role'] != 'Student': return redirect('/')
+    return render_template('student_dashboard.html', session=session)
 
 # 6. The API to Get a Random Question
 @app.route('/api/get_question', methods=['GET'])
@@ -151,12 +167,14 @@ def check_answer():
 # 8. Show the Student Display Window
 @app.route('/shop')
 def shop():
-    return render_template('shop.html')
+    if 'role' not in session or session['role'] != 'Student': return redirect('/')
+    return render_template('shop.html', session=session)
 
 # 9. Show the Parent Shop Control Center
 @app.route('/parent_shop')
 def parent_shop():
-    return render_template('parent_shop.html')
+    if 'role' not in session or session['role'] != 'Parent': return redirect('/')
+    return render_template('parent_shop.html', session=session)
 
 # 10. API to Fetch All Commodities
 @app.route('/api/commodities', methods=['GET'])
@@ -280,19 +298,25 @@ def delete_subject(sub_id):
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
+    user = User.query.filter_by(name=data['name'], role=data['role'], grade_class=data.get('grade_class')).first()
     
-    # Find the user
-    user = User.query.filter_by(
-        name=data['name'], 
-        role=data['role'], 
-        grade_class=data.get('grade_class')
-    ).first()
-    
-    # Check if user exists AND if the password matches the hash
     if user and check_password_hash(user.password_hash, data['password']):
-        return jsonify({"success": True, "message": "Login successful!"})
+        # Give them a wristband!
+        session['user_id'] = user.id
+        session['name'] = user.name
+        session['role'] = user.role
+        session['grade_class'] = user.grade_class
+        
+        redirect_url = '/parent_dashboard' if user.role == 'Parent' else '/student_dashboard'
+        return jsonify({"success": True, "redirect": redirect_url})
     else:
-        return jsonify({"success": False, "message": "Invalid Name, Class, or Password!"}), 401
+        return jsonify({"success": False, "message": "Invalid credentials!"}), 401
+
+# 18. The Logout API
+@app.route('/logout')
+def logout():
+    session.clear() # Rips off the wristband
+    return redirect('/')
 
 # --- AUTO-BUILD DATABASE & DEFAULTS ---
 with app.app_context():
