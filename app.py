@@ -229,6 +229,12 @@ def get_balance():
         return jsonify({"error": "Student not found"}), 404
     return jsonify({"name": user.name, "points": user.reward_points})
 
+# --- AUTO-BUILD DATABASE TABLES ---
+with app.app_context():
+    db.create_all()
+
+if __name__ == '__main__':
+    # ... your existing run code ...
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
