@@ -430,7 +430,7 @@ def delete_question(id):
 
 # --- AUTO-BUILD DATABASE & DEFAULTS ---
 with app.app_context():
-    db.drop_all()
+    # db.drop_all()
     db.create_all()
     
     # If the Subject table is completely empty, auto-fill the CBSE defaults!
