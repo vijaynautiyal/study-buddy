@@ -2,182 +2,173 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Study Buddy - Shop Manager</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        background-color: #fce4ec;
-        text-align: center;
-      }
-      .navbar {
-        background-color: #007bff;
-        padding: 15px;
-        color: white;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .navbar a {
-        color: white;
-        text-decoration: none;
-        padding: 10px;
-        margin: 0 5px;
-        background: #0056b3;
-        border-radius: 5px;
-      }
-      .card {
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        width: 480px;
-        margin: 20px auto;
-        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-      }
-      input,
-      select,
-      button {
-        width: 92%;
-        padding: 10px;
-        margin: 8px 0;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-      }
-      .btn-add {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        cursor: pointer;
-        font-weight: bold;
-      }
-      .btn-deduct {
-        background-color: #dc3545;
-        color: white;
-        border: none;
-        cursor: pointer;
-        font-weight: bold;
-      }
-      .inventory-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px;
-        border-bottom: 1px solid #eee;
-        text-align: left;
-      }
-      .action-btns button {
-        width: auto;
-        padding: 5px 10px;
-        margin: 0 2px;
-        font-size: 12px;
-        cursor: pointer;
-      }
-      .btn-edit {
-        background-color: #ffc107;
-        color: black;
-        border: 1px solid #e0a800;
-      }
-      .btn-del {
-        background-color: #6c757d;
-        color: white;
-        border: none;
-      }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shop Manager | Study Buddy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
-    <!-- Navigation Bar -->
-    <div class="navbar">
-      <a href="/parent_dashboard">⬅️ Back to Dashboard</a>
-      <span>Shop Manager: <strong>{{ session.name }}</strong></span>
-      <a href="/logout" style="background: #dc3545">Logout</a>
-    </div>
-
-    <!-- Section 1: Add New Commodity -->
-    <div class="card">
-      <h2>🎁 Add New Reward</h2>
-      <input
-        type="text"
-        id="itemName"
-        placeholder="E.g., Chocolate, 30 min Gaming"
-      />
-      <input type="number" id="itemCost" placeholder="Cost in Points" />
-      <button class="btn-add" onclick="addCommodity()">Add to Shop</button>
-      <p id="addMsg" style="font-weight: bold"></p>
-    </div>
-
-    <!-- Section 2: Manage Existing Inventory -->
-    <div class="card">
-      <h2>📋 Current Inventory</h2>
-      <div id="inventoryList" style="max-height: 250px; overflow-y: auto">
-        <!-- Items loaded via JS -->
+  <body class="bg-slate-50 min-h-screen">
+    <nav class="bg-slate-800 text-white p-4 shadow-md">
+      <div class="max-w-5xl mx-auto flex justify-between items-center">
+        <a
+          href="/parent_dashboard"
+          class="flex items-center gap-2 hover:text-blue-400 transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <span class="font-bold text-sm">Back to Admin</span>
+        </a>
+        <span class="font-bold">🛍️ Shop & Points Manager</span>
       </div>
-    </div>
+    </nav>
 
-    <!-- Section 3: Deduct Points (Claim Reward) -->
-    <div class="card">
-      <h2>🧾 Deduct Points (Claim Reward)</h2>
-      <p style="font-size: 14px; color: #666">
-        Verify the student's name and class to deduct points.
-      </p>
-      <input type="text" id="studentName" placeholder="Student Name" />
-      <select id="studentClass">
-        <option value="" disabled selected>Student Class</option>
-        <option value="1">Class 1</option>
-        <option value="2">Class 2</option>
-        <option value="3">Class 3</option>
-        <option value="4">Class 4</option>
-        <option value="5">Class 5</option>
-        <option value="6">Class 6</option>
-        <option value="7">Class 7</option>
-        <option value="8">Class 8</option>
-      </select>
-      <select id="commoditySelect">
-        <option value="" disabled selected>Loading items...</option>
-      </select>
-      <button class="btn-deduct" onclick="deductPoints()">
-        Confirm & Deduct Points
-      </button>
-      <p id="deductMsg" style="font-weight: bold"></p>
-    </div>
+    <main class="max-w-5xl mx-auto p-6 grid md:grid-cols-2 gap-8">
+      <!-- Left Column: Inventory -->
+      <div class="space-y-6">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <h3
+            class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"
+          >
+            🎁 Add New Reward
+          </h3>
+          <div class="space-y-3">
+            <input
+              type="text"
+              id="itemName"
+              placeholder="Reward Name (e.g. Ice Cream)"
+              class="w-full p-3 rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="number"
+              id="itemCost"
+              placeholder="Point Cost"
+              class="w-full p-3 rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              onclick="addCommodity()"
+              class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-all"
+            >
+              Add to Store
+            </button>
+            <p id="addMsg" class="text-sm text-center font-bold"></p>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <h3 class="text-xl font-bold text-slate-800 mb-4">
+            Current Inventory
+          </h3>
+          <div
+            id="inventoryList"
+            class="space-y-3 max-height-[400px] overflow-y-auto"
+          >
+            <!-- Items -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Redemptions -->
+      <div
+        class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit sticky top-6"
+      >
+        <h3
+          class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"
+        >
+          🧾 Approve Redemption
+        </h3>
+        <p class="text-slate-500 text-sm mb-6">
+          When a student wants to buy an item, use this to deduct their points.
+        </p>
+
+        <div class="space-y-4">
+          <div>
+            <label class="text-xs font-bold text-slate-400 uppercase ml-1"
+              >Student Details</label
+            >
+            <div class="flex gap-2">
+              <input
+                type="text"
+                id="studentName"
+                placeholder="Name"
+                class="w-2/3 p-3 rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <select
+                id="studentClass"
+                class="w-1/3 p-3 rounded-lg border border-slate-200 outline-none bg-slate-50"
+              >
+                <option value="1">C-1</option>
+                <option value="2">C-2</option>
+                <option value="3">C-3</option>
+                <option value="4">C-4</option>
+                <option value="5">C-5</option>
+                <option value="6">C-6</option>
+                <option value="7">C-7</option>
+                <option value="8">C-8</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-xs font-bold text-slate-400 uppercase ml-1"
+              >Select Reward</label
+            >
+            <select
+              id="commoditySelect"
+              class="w-full p-3 rounded-lg border border-slate-200 outline-none bg-slate-50"
+            >
+              <!-- Loaded via JS -->
+            </select>
+          </div>
+
+          <button
+            onclick="deductPoints()"
+            class="w-full bg-slate-800 text-white font-bold py-4 rounded-xl hover:bg-slate-900 shadow-lg transition-all active:scale-95"
+          >
+            CONFIRM PURCHASE ✅
+          </button>
+          <p id="deductMsg" class="text-sm text-center font-bold"></p>
+        </div>
+      </div>
+    </main>
 
     <script>
-      // Load inventory immediately on page load
       window.onload = loadData;
 
       async function loadData() {
         const response = await fetch("/api/commodities");
         const items = await response.json();
-
         const inventoryList = document.getElementById("inventoryList");
         const deductSelect = document.getElementById("commoditySelect");
 
         inventoryList.innerHTML = "";
         deductSelect.innerHTML =
-          '<option value="" disabled selected>Select Reward to Claim</option>';
-
-        if (items.length === 0) {
-          inventoryList.innerHTML =
-            '<p style="color:gray;">No rewards in the shop yet.</p>';
-          return;
-        }
+          '<option value="" disabled selected>Select Item</option>';
 
         items.forEach((item) => {
-          // Populate Dropdown
           deductSelect.innerHTML += `<option value="${item.cost}">${item.name} (${item.cost} pts)</option>`;
-
-          // Populate Inventory List
           inventoryList.innerHTML += `
-                    <div class="inventory-item">
+                    <div class="flex justify-between items-center p-4 bg-slate-50 rounded-xl border border-slate-100">
                         <div>
-                            <strong>${item.name}</strong><br>
-                            <small>${item.cost} Points</small>
+                            <p class="font-bold text-slate-800">${item.name}</p>
+                            <p class="text-sm text-blue-600 font-bold">${item.cost} Points</p>
                         </div>
-                        <div class="action-btns">
-                            <button class="btn-edit" onclick="updateItem(${item.id}, '${item.name}', ${item.cost})">✏️ Edit</button>
-                            <button class="btn-del" onclick="deleteItem(${item.id})">❌</button>
+                        <div class="flex gap-2">
+                            <button onclick="deleteItem(${item.id})" class="p-2 text-slate-400 hover:text-red-500 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
         });
       }
 
@@ -195,7 +186,7 @@
 
         const msg = document.getElementById("addMsg");
         msg.innerText = result.message;
-        msg.style.color = result.success ? "green" : "red";
+        msg.className = `text-sm text-center font-bold ${result.success ? "text-green-600" : "text-red-600"}`;
 
         if (result.success) {
           document.getElementById("itemName").value = "";
@@ -205,20 +196,8 @@
       }
 
       async function deleteItem(id) {
-        if (confirm("Are you sure you want to remove this reward?")) {
+        if (confirm("Remove item from shop?")) {
           await fetch(`/api/delete_commodity/${id}`, { method: "DELETE" });
-          loadData();
-        }
-      }
-
-      async function updateItem(id, name, currentCost) {
-        const newCost = prompt(`New point cost for '${name}':`, currentCost);
-        if (newCost !== null && newCost !== "") {
-          await fetch("/api/update_commodity", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: id, cost: newCost }),
-          });
           loadData();
         }
       }
@@ -227,13 +206,6 @@
         const studentName = document.getElementById("studentName").value;
         const studentClass = document.getElementById("studentClass").value;
         const cost = document.getElementById("commoditySelect").value;
-
-        if (!studentName || !studentClass || !cost) {
-          document.getElementById("deductMsg").innerText =
-            "Please select a student, class, and reward!";
-          document.getElementById("deductMsg").style.color = "red";
-          return;
-        }
 
         const response = await fetch("/api/parent_redeem", {
           method: "POST",
@@ -248,7 +220,7 @@
 
         const msg = document.getElementById("deductMsg");
         msg.innerText = result.message;
-        msg.style.color = result.success ? "green" : "red";
+        msg.className = `text-sm text-center font-bold ${result.success ? "text-green-600" : "text-red-600"}`;
       }
     </script>
   </body>

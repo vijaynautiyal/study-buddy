@@ -2,147 +2,122 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Study Buddy - Rewards Shop</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        background-color: #e8f5e9;
-        text-align: center;
-      }
-      .navbar {
-        background-color: #343a40;
-        padding: 15px;
-        color: white;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .navbar a {
-        color: white;
-        text-decoration: none;
-        padding: 10px;
-        margin: 0 5px;
-        background: #495057;
-        border-radius: 5px;
-      }
-      .card {
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        width: 450px;
-        margin: 30px auto;
-        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-      }
-      .point-display {
-        color: #28a745;
-        font-size: 24px;
-        margin: 10px 0;
-      }
-      .store-item {
-        border: 2px dashed #28a745;
-        padding: 15px;
-        margin: 15px 0;
-        border-radius: 8px;
-        background-color: #fafafa;
-        text-align: left;
-      }
-      .store-item h4 {
-        margin: 0;
-        color: #333;
-      }
-      .store-item p {
-        margin: 5px 0;
-        color: #666;
-        font-weight: bold;
-      }
-      .info-text {
-        color: #6c757d;
-        font-size: 14px;
-        line-height: 1.4;
-      }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rewards Shop | Study Buddy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
-    <!-- Navigation Bar -->
-    <div class="navbar">
-      <a href="/student_dashboard">⬅️ Back to Dashboard</a>
-      <span>Logged in as: <strong>{{ session.name }}</strong></span>
-      <a href="/logout" style="background: #dc3545">Logout</a>
-    </div>
-
-    <div class="card">
-      <h2>🛍️ Rewards Shop</h2>
-
-      <div class="point-display">
-        My Balance: <span id="pointBalance">...</span> 🌟
-      </div>
-
-      <p class="info-text">
-        Below are the rewards your parents have added. <br />
-        <strong
-          >To claim an item, please show your points to your parent!</strong
+  <body class="bg-emerald-50 min-h-screen">
+    <nav class="bg-slate-800 text-white p-4 shadow-md">
+      <div class="max-w-4xl mx-auto flex justify-between items-center">
+        <a
+          href="/student_dashboard"
+          class="flex items-center gap-2 hover:text-emerald-400 transition-colors"
         >
-      </p>
-
-      <hr />
-
-      <div id="itemList">
-        <p style="color: gray">Loading rewards list...</p>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <span class="font-bold">Dashboard</span>
+        </a>
+        <span class="text-sm opacity-80"
+          >Explorer: <strong>{{ session.name }}</strong></span
+        >
       </div>
-    </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto p-6">
+      <!-- Balance Card -->
+      <div
+        class="bg-white rounded-3xl shadow-xl p-8 mb-8 flex flex-col md:flex-row items-center justify-between border-4 border-emerald-400"
+      >
+        <div class="text-center md:text-left mb-4 md:mb-0">
+          <h2 class="text-4xl font-black text-slate-800">Your Treasure 🌟</h2>
+          <p class="text-slate-500 font-medium">Keep learning to earn more!</p>
+        </div>
+        <div class="bg-emerald-100 px-8 py-4 rounded-2xl">
+          <span
+            id="pointBalance"
+            class="text-5xl font-black text-emerald-600 tracking-tighter"
+            >...</span
+          >
+          <span class="text-emerald-500 font-bold text-xl ml-2">PTS</span>
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <h3 class="text-2xl font-bold text-slate-800">Available Rewards</h3>
+        <p class="text-slate-500 text-sm italic">
+          Show your parent your points to claim these items!
+        </p>
+      </div>
+
+      <!-- Rewards Grid -->
+      <div
+        id="itemList"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
+        <!-- Loading State -->
+        <div
+          class="animate-pulse bg-white p-6 rounded-2xl shadow-sm h-32"
+        ></div>
+        <div
+          class="animate-pulse bg-white p-6 rounded-2xl shadow-sm h-32"
+        ></div>
+        <div
+          class="animate-pulse bg-white p-6 rounded-2xl shadow-sm h-32"
+        ></div>
+      </div>
+    </main>
 
     <script>
-      // Use Session variables from Flask
       const STUDENT_NAME = "{{ session.name }}";
       const GRADE_CLASS = "{{ session.grade_class }}";
 
-      // Run this immediately when the page loads
-      window.onload = async function () {
-        loadShopData();
-      };
+      window.onload = loadShopData;
 
       async function loadShopData() {
-        // 1. Fetch Student Balance
-        try {
-          const balanceRes = await fetch(
-            `/api/balance?name=${STUDENT_NAME}&grade=${GRADE_CLASS}`,
-          );
-          if (balanceRes.ok) {
-            const balanceData = await balanceRes.json();
-            document.getElementById("pointBalance").innerText =
-              balanceData.points;
-          }
-        } catch (err) {
-          console.error("Error fetching balance:", err);
-        }
+        // 1. Fetch Balance
+        const balanceRes = await fetch(
+          `/api/balance?name=${STUDENT_NAME}&grade=${GRADE_CLASS}`,
+        );
+        const balanceData = await balanceRes.json();
+        document.getElementById("pointBalance").innerText = balanceData.points;
 
-        // 2. Fetch Available Commodities
-        try {
-          const itemRes = await fetch("/api/commodities");
-          const items = await itemRes.json();
+        // 2. Fetch Rewards
+        const itemRes = await fetch("/api/commodities");
+        const items = await itemRes.json();
+        const itemList = document.getElementById("itemList");
+        itemList.innerHTML = "";
 
-          const itemList = document.getElementById("itemList");
-          itemList.innerHTML = "";
-
-          if (items.length === 0) {
-            itemList.innerHTML =
-              "<p style='color:gray;'>Your parents haven't added any rewards yet.</p>";
-            return;
-          }
-
-          items.forEach((item) => {
-            itemList.innerHTML += `
-                    <div class="store-item">
-                        <h4>🎁 ${item.name}</h4>
-                        <p>Cost: ${item.cost} Points</p>
+        if (items.length === 0) {
+          itemList.innerHTML = `
+                    <div class="col-span-full bg-white p-10 rounded-2xl text-center border-2 border-dashed border-slate-200">
+                        <p class="text-slate-400 font-bold">No rewards added yet. Check back soon!</p>
                     </div>`;
-          });
-        } catch (err) {
-          console.error("Error fetching items:", err);
-          document.getElementById("itemList").innerText =
-            "Failed to load rewards.";
+          return;
         }
+
+        items.forEach((item) => {
+          itemList.innerHTML += `
+                    <div class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all border border-slate-100 group">
+                        <div class="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+                            🎁
+                        </div>
+                        <h4 class="text-xl font-bold text-slate-800 mb-1">${item.name}</h4>
+                        <div class="flex items-center justify-between mt-4">
+                            <span class="text-emerald-600 font-black text-lg">${item.cost} <span class="text-xs uppercase">Pts</span></span>
+                            <span class="text-xs font-bold text-slate-300 uppercase tracking-widest">Available</span>
+                        </div>
+                    </div>`;
+        });
       }
     </script>
   </body>

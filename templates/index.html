@@ -2,105 +2,102 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Welcome to Study Buddy</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        text-align: center;
-        padding: 50px;
-        background-color: #f4f4f9;
-        margin: 0;
-      }
-      .card {
-        background: white;
-        padding: 30px;
-        border-radius: 12px;
-        width: 350px;
-        margin: 0 auto;
-        box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.1);
-      }
-      h2 {
-        color: #333;
-        margin-bottom: 20px;
-      }
-      input,
-      select,
-      button {
-        width: 95%;
-        padding: 12px;
-        margin: 10px 0;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        font-size: 15px;
-        box-sizing: border-box;
-      }
-      button {
-        background-color: #28a745;
-        color: white;
-        border: none;
-        cursor: pointer;
-        font-weight: bold;
-        transition: 0.3s;
-      }
-      button:hover {
-        background-color: #218838;
-      }
-      .toggle-link {
-        color: #007bff;
-        cursor: pointer;
-        text-decoration: underline;
-        font-size: 14px;
-        display: block;
-        margin-top: 15px;
-      }
-      .hidden {
-        display: none;
-      }
-      #message {
-        font-weight: bold;
-        margin-top: 15px;
-      }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Study Buddy | Welcome</title>
+    <!-- The Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
-    <h1>🎓 Study Buddy</h1>
-    <p>Master your subjects, earn your rewards.</p>
+  <body
+    class="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 min-h-screen flex items-center justify-center p-4"
+  >
+    <div
+      class="max-w-md w-full bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 transform transition-all hover:scale-[1.01]"
+    >
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <h1
+          class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-2"
+        >
+          🎓 Study Buddy
+        </h1>
+        <p class="text-gray-500 font-medium">
+          Master your subjects, earn your rewards.
+        </p>
+      </div>
 
-    <div class="card">
-      <!-- Dynamic Header -->
-      <h2 id="formTitle">Secure Login</h2>
+      <h2
+        id="formTitle"
+        class="text-2xl font-bold text-gray-800 mb-6 text-center"
+      >
+        Secure Login
+      </h2>
 
-      <form id="authForm">
-        <input type="text" id="name" placeholder="Full Name" required />
-        <input type="password" id="password" placeholder="Password" required />
+      <form id="authForm" class="space-y-4">
+        <div>
+          <input
+            type="text"
+            id="name"
+            placeholder="Full Name"
+            required
+            class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+          />
+        </div>
 
-        <select id="role" required>
-          <option value="" disabled selected>Who are you?</option>
-          <option value="Student">I am a Student</option>
-          <option value="Parent">I am a Parent</option>
-        </select>
+        <div>
+          <input
+            type="password"
+            id="password"
+            placeholder="Password"
+            required
+            class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+          />
+        </div>
 
-        <select id="grade" class="hidden">
-          <option value="" disabled selected>Select your Class</option>
-          <option value="1">Class 1</option>
-          <option value="2">Class 2</option>
-          <option value="3">Class 3</option>
-          <option value="4">Class 4</option>
-          <option value="5">Class 5</option>
-          <option value="6">Class 6</option>
-          <option value="7">Class 7</option>
-          <option value="8">Class 8</option>
-        </select>
+        <div class="grid grid-cols-1 gap-4">
+          <select
+            id="role"
+            required
+            class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 outline-none bg-white cursor-pointer"
+          >
+            <option value="" disabled selected>Who are you?</option>
+            <option value="Student">I am a Student</option>
+            <option value="Parent">I am a Parent</option>
+          </select>
 
-        <button type="submit" id="submitBtn">Login</button>
+          <select
+            id="grade"
+            class="hidden w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 outline-none bg-white"
+          >
+            <option value="" disabled selected>Select your Class</option>
+            <option value="1">Class 1</option>
+            <option value="2">Class 2</option>
+            <option value="3">Class 3</option>
+            <option value="4">Class 4</option>
+            <option value="5">Class 5</option>
+            <option value="6">Class 6</option>
+            <option value="7">Class 7</option>
+            <option value="8">Class 8</option>
+          </select>
+        </div>
+
+        <button
+          type="submit"
+          id="submitBtn"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow-lg hover:shadow-indigo-500/50 transition-all active:scale-95"
+        >
+          Login
+        </button>
       </form>
 
-      <p id="message"></p>
+      <p id="message" class="mt-4 text-center font-semibold text-sm"></p>
 
-      <!-- Toggle between Login and Signup -->
-      <span class="toggle-link" id="toggleLink" onclick="toggleMode()"
-        >Don't have an account? Sign Up here.</span
+      <button
+        id="toggleLink"
+        onclick="toggleMode()"
+        class="w-full mt-6 text-indigo-600 hover:text-indigo-800 text-sm font-semibold underline underline-offset-4"
       >
+        Don't have an account? Sign Up here.
+      </button>
     </div>
 
     <script>
@@ -111,7 +108,6 @@
       const roleSelect = document.getElementById("role");
       const gradeSelect = document.getElementById("grade");
 
-      // Show/Hide Grade selector for Students
       roleSelect.addEventListener("change", function () {
         if (this.value === "Student") {
           gradeSelect.classList.remove("hidden");
@@ -122,18 +118,13 @@
         }
       });
 
-      // Switch between Login and Signup
       function toggleMode() {
         isLoginMode = !isLoginMode;
-        if (isLoginMode) {
-          formTitle.innerText = "Secure Login";
-          submitBtn.innerText = "Login";
-          toggleLink.innerText = "Don't have an account? Sign Up here.";
-        } else {
-          formTitle.innerText = "Join Study Buddy";
-          submitBtn.innerText = "Create Account";
-          toggleLink.innerText = "Already have an account? Login here.";
-        }
+        formTitle.innerText = isLoginMode ? "Secure Login" : "Join Study Buddy";
+        submitBtn.innerText = isLoginMode ? "Login" : "Create Account";
+        toggleLink.innerText = isLoginMode
+          ? "Don't have an account? Sign Up here."
+          : "Already have an account? Login here.";
         document.getElementById("message").innerText = "";
       }
 
@@ -143,7 +134,8 @@
           e.preventDefault();
           const msgEl = document.getElementById("message");
           msgEl.innerText = "Processing...";
-          msgEl.style.color = "gray";
+          msgEl.className =
+            "mt-4 text-center text-gray-500 font-semibold text-sm";
 
           const payload = {
             name: document.getElementById("name").value,
@@ -152,7 +144,6 @@
             grade_class: document.getElementById("grade").value || null,
           };
 
-          // Decide which API to call based on the mode
           const endpoint = isLoginMode ? "/api/login" : "/api/register";
 
           try {
@@ -161,21 +152,22 @@
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
             });
-
             const result = await response.json();
 
             if (response.ok && result.success) {
               msgEl.innerText = "Success! Redirecting...";
-              msgEl.style.color = "green";
-              // Whisks the user to the dashboard Python told us about!
+              msgEl.className =
+                "mt-4 text-center text-green-600 font-semibold text-sm";
               window.location.href = result.redirect;
             } else {
               msgEl.innerText = result.message || "Error occurred.";
-              msgEl.style.color = "red";
+              msgEl.className =
+                "mt-4 text-center text-red-600 font-semibold text-sm";
             }
           } catch (error) {
             msgEl.innerText = "Connection failed!";
-            msgEl.style.color = "red";
+            msgEl.className =
+              "mt-4 text-center text-red-600 font-semibold text-sm";
           }
         });
     </script>

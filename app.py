@@ -3,10 +3,33 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql.expression import func
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
+import json # We need this to parse the AI's response
+from langchain_groq import ChatGroq
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import JsonOutputParser
+
 
 
 app = Flask(__name__)
 app.secret_key = "super_secret_study_buddy_key" # This locks the session data!
+
+
+# AI LOGIC (Feel free to ignore this part, it's just for fun!)
+
+# 1. Initialize LangChain with Groq (Free Tier)
+# Using Llama-3.3-70b-versatile or DeepSeek-R1-Distill for high reasoning
+llm = ChatGroq(
+    temperature=0.7,
+    groq_api_key=os.environ.get("GROQ_API_KEY"),
+    model_name="llama-3.3-70b-versatile" 
+)
+
+# # Configure Gemini AI
+# genai.configure(api_key="AIzaSyBxYPfkI4v3B-Rep6zb-70Tl1n_YV9Q0Qs") # <--- PASTE YOUR KEY HERE
+# model = genai.GenerativeModel('gemini-2.0-flash')
+
+
+
 
 # --- DATABASE CONFIGURATION ---
 # This tells Python to look for a Render database FIRST. If it doesn't find one, it uses your local one!
@@ -317,6 +340,93 @@ def login():
 def logout():
     session.clear() # Rips off the wristband
     return redirect('/')
+
+
+
+# 19. The AI Question Generator (UPGRADED FOR GROK)
+@app.route('/api/generate_ai_questions', methods=['POST'])
+def generate_ai_questions():
+    data = request.get_json()
+    grade = data.get('grade_class')
+    subject = data.get('subject')
+    is_olympiad = data.get('is_olympiad', False)
+
+    # Professional Prompt Engineering for CBSE/Olympiad
+    difficulty = "Olympiad Level (Logical, Multi-step)" if is_olympiad else "CBSE Metro Standard (Delhi/Mumbai/Bangalore)"
+    
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are a senior curriculum developer for top CBSE schools in India."),
+        ("human", """Generate 1 challenging MCQ for Class {grade}, Subject: {subject}.
+        Difficulty: {difficulty}.
+        Ensure it matches the 2026 Indian curriculum standards.
+        
+        Return ONLY a JSON object with these keys: 
+        question_text, option_a, option_b, option_c, option_d, correct_option (A, B, C, or D).""")
+    ])
+
+    # Chain the steps: Prompt -> Model -> JSON Parser
+    chain = prompt | llm | JsonOutputParser()
+
+    try:
+        q_data = chain.invoke({
+            "grade": grade, 
+            "subject": subject, 
+            "difficulty": difficulty
+        })
+        
+        # Save to Database
+        new_q = Question(
+            grade_class=int(grade),
+            subject=subject,
+            question_text=q_data['question_text'],
+            option_a=q_data['option_a'],
+            option_b=q_data['option_b'],
+            option_c=q_data['option_c'],
+            option_d=q_data['option_d'],
+            correct_option=q_data['correct_option']
+        )
+        db.session.add(new_q)
+        db.session.commit()
+        
+        return jsonify({"success": True, "question": q_data['question_text']})
+
+    except Exception as e:
+        print(f"LangChain/Groq Error: {e}")
+        return jsonify({"success": False, "message": "AI is busy. Please try again!"}), 500
+
+
+
+
+# 20. API to Fetch Questions for Audit
+@app.route('/api/view_questions', methods=['GET'])
+def view_questions():
+    grade = request.args.get('grade_class')
+    subject = request.args.get('subject')
+    
+    if not grade or not subject:
+        return jsonify([])
+
+    questions = Question.query.filter_by(grade_class=grade, subject=subject).all()
+    
+    output = []
+    for q in questions:
+        output.append({
+            "id": q.id,
+            "text": q.question_text,
+            "options": f"A: {q.option_a} | B: {q.option_b} | C: {q.option_c} | D: {q.option_d}",
+            "correct": q.correct_option
+        })
+    return jsonify(output)
+
+# 21. API to Delete a Specific Question
+@app.route('/api/delete_question/<int:id>', methods=['DELETE'])
+def delete_question(id):
+    q = Question.query.get(id)
+    if q:
+        db.session.delete(q)
+        db.session.commit()
+        return jsonify({"success": True, "message": "Question deleted!"})
+    return jsonify({"success": False, "message": "Not found"}), 404
 
 # --- AUTO-BUILD DATABASE & DEFAULTS ---
 with app.app_context():

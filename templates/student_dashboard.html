@@ -2,74 +2,101 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Student Dashboard</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        background-color: #f4f4f9;
-        text-align: center;
-      }
-      .navbar {
-        background-color: #343a40;
-        padding: 15px;
-        color: white;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .navbar a {
-        color: white;
-        text-decoration: none;
-        padding: 10px;
-        margin: 0 5px;
-        background: #495057;
-        border-radius: 5px;
-      }
-      .navbar a.logout {
-        background: #dc3545;
-      }
-      .card {
-        background: white;
-        padding: 30px;
-        border-radius: 10px;
-        width: 400px;
-        margin: 40px auto;
-        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-      }
-      .big-btn {
-        display: block;
-        width: 90%;
-        padding: 15px;
-        margin: 15px auto;
-        background-color: #28a745;
-        color: white;
-        text-decoration: none;
-        font-size: 18px;
-        font-weight: bold;
-        border-radius: 8px;
-      }
-      .big-btn.shop {
-        background-color: #17a2b8;
-      }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard | Study Buddy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
-    <div class="navbar">
-      <h2>Study Buddy 🎓</h2>
-      <div>
-        <span
-          >Welcome, {{ session.name }} (Class {{ session.grade_class }})</span
-        >
-        <a href="/logout" class="logout">Logout</a>
+  <body class="bg-slate-50 min-h-screen">
+    <nav class="bg-indigo-600 text-white shadow-lg p-4">
+      <div class="max-w-4xl mx-auto flex justify-between items-center">
+        <h1 class="text-2xl font-bold tracking-tight">🎓 Study Buddy</h1>
+        <div class="flex items-center gap-4">
+          <span class="hidden md:inline opacity-90"
+            >Hi, <span class="font-bold">{{ session.name }}</span> (Class {{
+            session.grade_class }})</span
+          >
+          <a
+            href="/logout"
+            class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-sm font-bold transition-all"
+            >Logout</a
+          >
+        </div>
       </div>
-    </div>
+    </nav>
 
-    <div class="card">
-      <h2>My Dashboard</h2>
-      <p>What would you like to do today?</p>
-      <a href="/student" class="big-btn">🎮 Play Quiz Arena</a>
-      <a href="/shop" class="big-btn shop">🛍️ Visit Rewards Shop</a>
-    </div>
+    <main class="max-w-4xl mx-auto p-6 mt-8">
+      <div class="text-center mb-10">
+        <h2 class="text-3xl font-extrabold text-slate-800">
+          Ready to level up? 🚀
+        </h2>
+        <p class="text-slate-500 mt-2">Pick your mission for today.</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-8">
+        <!-- Quiz Arena Card -->
+        <a
+          href="/student"
+          class="group bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-500/10 transition-all text-center"
+        >
+          <div
+            class="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 text-indigo-600 rounded-xl mb-4 group-hover:scale-110 transition-transform"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-8 w-8"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-slate-800 mb-2">Quiz Arena</h3>
+          <p class="text-slate-500 text-sm">
+            Solve questions from your school subjects and earn points.
+          </p>
+        </a>
+
+        <!-- Shop Card -->
+        <a
+          href="/shop"
+          class="group bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:border-emerald-400 hover:shadow-xl hover:shadow-emerald-500/10 transition-all text-center"
+        >
+          <div
+            class="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 text-emerald-600 rounded-xl mb-4 group-hover:scale-110 transition-transform"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-8 w-8"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+              />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-slate-800 mb-2">Rewards Shop</h3>
+          <p class="text-slate-500 text-sm">
+            View amazing rewards and check your point balance.
+          </p>
+        </a>
+      </div>
+    </main>
   </body>
 </html>

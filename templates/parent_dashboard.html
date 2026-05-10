@@ -2,74 +2,92 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Parent Dashboard</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        background-color: #e9ecef;
-        text-align: center;
-      }
-      .navbar {
-        background-color: #007bff;
-        padding: 15px;
-        color: white;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .navbar a {
-        color: white;
-        text-decoration: none;
-        padding: 10px;
-        margin: 0 5px;
-        background: #0056b3;
-        border-radius: 5px;
-      }
-      .navbar a.logout {
-        background: #dc3545;
-      }
-      .card {
-        background: white;
-        padding: 30px;
-        border-radius: 10px;
-        width: 400px;
-        margin: 40px auto;
-        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-      }
-      .big-btn {
-        display: block;
-        width: 90%;
-        padding: 15px;
-        margin: 15px auto;
-        background-color: #28a745;
-        color: white;
-        text-decoration: none;
-        font-size: 18px;
-        font-weight: bold;
-        border-radius: 8px;
-      }
-      .big-btn.shop {
-        background-color: #6c757d;
-      }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Parent Control | Study Buddy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
-    <div class="navbar">
-      <h2>Study Buddy Control Panel</h2>
-      <div>
-        <span>Welcome, Parent {{ session.name }}</span>
-        <a href="/logout" class="logout">Logout</a>
+  <body class="bg-slate-50 min-h-screen">
+    <nav class="bg-slate-800 text-white shadow-lg p-4">
+      <div class="max-w-4xl mx-auto flex justify-between items-center">
+        <h1 class="text-2xl font-bold tracking-tight">🛠️ Parent Control</h1>
+        <div class="flex items-center gap-4">
+          <span class="opacity-80"
+            >Parent: <span class="font-bold">{{ session.name }}</span></span
+          >
+          <a
+            href="/logout"
+            class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-sm font-bold transition-all"
+            >Logout</a
+          >
+        </div>
       </div>
-    </div>
+    </nav>
 
-    <div class="card">
-      <h2>Parent Dashboard</h2>
-      <p>Select a tool to manage your student's journey.</p>
-      <a href="/parent" class="big-btn">📚 Content & Quiz Manager</a>
-      <a href="/parent_shop" class="big-btn shop"
-        >🎁 Inventory & Rewards Manager</a
-      >
-    </div>
+    <main class="max-w-4xl mx-auto p-6 mt-8">
+      <div class="mb-10">
+        <h2 class="text-3xl font-extrabold text-slate-800">Management Hub</h2>
+        <p class="text-slate-500 mt-2">
+          Configure questions and manage the reward economy.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-8">
+        <a
+          href="/parent"
+          class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg transition-all flex items-start gap-4"
+        >
+          <div class="p-3 bg-blue-100 text-blue-600 rounded-lg">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+              />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-slate-800">Content Manager</h3>
+            <p class="text-slate-500 text-sm mt-1">
+              Add subjects and publish quiz questions for all classes.
+            </p>
+          </div>
+        </a>
+
+        <a
+          href="/parent_shop"
+          class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg transition-all flex items-start gap-4"
+        >
+          <div class="p-3 bg-indigo-100 text-indigo-600 rounded-lg">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+              />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-slate-800">Shop & Rewards</h3>
+            <p class="text-slate-500 text-sm mt-1">
+              Set reward costs and approve point redemptions.
+            </p>
+          </div>
+        </a>
+      </div>
+    </main>
   </body>
 </html>
