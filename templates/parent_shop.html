@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Parent Control - Rewards</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 20px;
+        background-color: #fce4ec;
+      }
+      .card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        width: 450px;
+        margin: 15px auto;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      input,
+      select,
+      button {
+        width: 90%;
+        padding: 10px;
+        margin: 8px 0;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+      .btn-add {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      .btn-deduct {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      /* New CSS for the Inventory List */
+      .inventory-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        text-align: left;
+      }
+      .action-btns button {
+        width: auto;
+        padding: 5px 10px;
+        margin: 0 2px;
+        font-size: 12px;
+      }
+      .btn-edit {
+        background-color: #ffc107;
+        color: black;
+      }
+      .btn-del {
+        background-color: #6c757d;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Section 1: Add New Commodity -->
+    <div class="card">
+      <h2>🎁 Add New Commodity</h2>
+      <input
+        type="text"
+        id="itemName"
+        placeholder="E.g., Colorbox, Energy Drink"
+      />
+      <input
+        type="number"
+        id="itemCost"
+        placeholder="Cost in Points (E.g., 200)"
+      />
+      <button class="btn-add" onclick="addCommodity()">Add to Shop</button>
+      <p id="addMsg" style="font-weight: bold"></p>
+    </div>
+
+    <!-- Section 2: Manage Existing Inventory -->
+    <div class="card">
+      <h2>📋 Current Inventory</h2>
+      <div id="inventoryList">
+        <!-- Items will be injected here by JavaScript -->
+      </div>
+    </div>
+
+    <!-- Section 3: Deduct Points -->
+    <div class="card">
+      <h2>🧾 Deduct Points (Give Reward)</h2>
+      <input type="text" id="studentName" placeholder="Enter Student Name" />
+      <select id="studentClass">
+        <option value="" disabled selected>Select Student's Class</option>
+        <option value="1">Class 1</option>
+        <option value="2">Class 2</option>
+        <option value="3">Class 3</option>
+        <option value="4">Class 4</option>
+        <option value="5">Class 5</option>
+        <option value="6">Class 6</option>
+        <option value="7">Class 7</option>
+        <option value="8">Class 8</option>
+      </select>
+      <select id="commoditySelect">
+        <option value="" disabled selected>Loading items...</option>
+      </select>
+      <button class="btn-deduct" onclick="deductPoints()">
+        Confirm & Deduct Points
+      </button>
+      <p id="deductMsg" style="font-weight: bold"></p>
+    </div>
+
+    <script>
+      // Load data when page opens
+      window.onload = loadData;
+
+      async function loadData() {
+        const response = await fetch("/api/commodities");
+        const items = await response.json();
+
+        const inventoryList = document.getElementById("inventoryList");
+        const deductSelect = document.getElementById("commoditySelect");
+
+        inventoryList.innerHTML = "";
+        deductSelect.innerHTML =
+          '<option value="" disabled selected>Select Item to Give</option>';
+
+        if (items.length === 0) {
+          inventoryList.innerHTML =
+            '<p style="color:gray;">No items in the shop yet.</p>';
+          return;
+        }
+
+        items.forEach((item) => {
+          // Populate Dropdown
+          deductSelect.innerHTML += `<option value="${item.cost}">${item.name} (${item.cost} pts)</option>`;
+
+          // Populate Inventory List
+          inventoryList.innerHTML += `
+                    <div class="inventory-item">
+                        <div>
+                            <strong>${item.name}</strong><br>
+                            <small>${item.cost} Points</small>
+                        </div>
+                        <div class="action-btns">
+                            <button class="btn-edit" onclick="updateItem(${item.id}, '${item.name}', ${item.cost})">✏️ Edit</button>
+                            <button class="btn-del" onclick="deleteItem(${item.id})">❌</button>
+                        </div>
+                    </div>
+                `;
+        });
+      }
+
+      async function addCommodity() {
+        const name = document.getElementById("itemName").value;
+        const cost = document.getElementById("itemCost").value;
+
+        if (!name || !cost) return;
+
+        const response = await fetch("/api/add_commodity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, cost }),
+        });
+        const result = await response.json();
+
+        const msgElement = document.getElementById("addMsg");
+        msgElement.innerText = result.message;
+        msgElement.style.color = result.success ? "green" : "red";
+
+        if (result.success) {
+          document.getElementById("itemName").value = "";
+          document.getElementById("itemCost").value = "";
+          loadData(); // Refresh the lists without reloading the page!
+        }
+      }
+
+      async function deleteItem(id) {
+        if (confirm("Are you sure you want to delete this item?")) {
+          await fetch(`/api/delete_commodity/${id}`, { method: "DELETE" });
+          loadData(); // Refresh lists
+        }
+      }
+
+      async function updateItem(id, name, currentCost) {
+        // Ask the parent for the new cost using a simple popup prompt
+        const newCost = prompt(
+          `Enter the new point cost for '${name}':`,
+          currentCost,
+        );
+
+        if (newCost !== null && newCost !== "") {
+          await fetch("/api/update_commodity", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: id, cost: newCost }),
+          });
+          loadData(); // Refresh lists
+        }
+      }
+
+      async function deductPoints() {
+        const studentName = document.getElementById("studentName").value;
+        const studentClass = document.getElementById("studentClass").value;
+        const cost = document.getElementById("commoditySelect").value;
+
+        if (!studentName || !studentClass || !cost) {
+          document.getElementById("deductMsg").innerText =
+            "Please fill out all fields!";
+          document.getElementById("deductMsg").style.color = "red";
+          return;
+        }
+
+        const response = await fetch("/api/parent_redeem", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            student_name: studentName,
+            grade_class: studentClass,
+            cost: cost,
+          }),
+        });
+        const result = await response.json();
+
+        const msgElement = document.getElementById("deductMsg");
+        msgElement.innerText = result.message;
+        msgElement.style.color = result.success ? "green" : "red";
+      }
+    </script>
+  </body>
+</html>

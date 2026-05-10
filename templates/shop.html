@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Study Buddy - Rewards Window</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 20px;
+        background-color: #e8f5e9;
+      }
+      .card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        width: 450px;
+        margin: 0 auto;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      input,
+      select,
+      button {
+        width: 90%;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+      .login-btn {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      .hidden {
+        display: none;
+      }
+      .store-item {
+        border: 2px dashed #28a745;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 8px;
+        background-color: #fafafa;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>🛍️ Rewards Display Window</h2>
+
+      <!-- Login Area (Now with Class Selector) -->
+      <div id="loginArea">
+        <input
+          type="text"
+          id="studentName"
+          placeholder="Enter your student name"
+          required
+        />
+
+        <select id="studentClass">
+          <option value="" disabled selected>Select your Class</option>
+          <option value="1">Class 1</option>
+          <option value="2">Class 2</option>
+          <option value="3">Class 3</option>
+          <option value="4">Class 4</option>
+          <option value="5">Class 5</option>
+          <option value="6">Class 6</option>
+          <option value="7">Class 7</option>
+          <option value="8">Class 8</option>
+        </select>
+
+        <button class="login-btn" onclick="loginToShop()">
+          Check My Points
+        </button>
+        <p id="loginMessage" style="color: red; font-weight: bold"></p>
+      </div>
+
+      <!-- Display Area -->
+      <div id="shopArea" class="hidden">
+        <h3 style="color: #28a745">
+          My Balance: <span id="pointBalance">0</span> Points 🌟
+        </h3>
+        <p style="color: #666; font-size: 14px">
+          See something you like? Go ask your Parent to claim it!
+        </p>
+
+        <div id="itemList">
+          <!-- Items will be loaded here by JavaScript -->
+        </div>
+
+        <button
+          style="
+            margin-top: 20px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 5px;
+          "
+          onclick="location.reload()"
+        >
+          Log Out
+        </button>
+      </div>
+    </div>
+
+    <script>
+      async function loginToShop() {
+        const name = document.getElementById("studentName").value;
+        const studentClass = document.getElementById("studentClass").value;
+
+        if (!name || !studentClass) {
+          document.getElementById("loginMessage").innerText =
+            "Please enter your name and class!";
+          return;
+        }
+
+        // 1. Get Balance from Python (Sending both Name and Class)
+        const balanceRes = await fetch(
+          `/api/balance?name=${name}&grade=${studentClass}`,
+        );
+        if (balanceRes.status === 404) {
+          document.getElementById("loginMessage").innerText =
+            "Student not found in that class!";
+          return;
+        }
+        const balanceData = await balanceRes.json();
+        document.getElementById("pointBalance").innerText = balanceData.points;
+
+        // 2. Load Commodities from Python
+        const itemRes = await fetch("/api/commodities");
+        const items = await itemRes.json();
+
+        const itemList = document.getElementById("itemList");
+        itemList.innerHTML = "";
+        items.forEach((item) => {
+          itemList.innerHTML += `
+                <div class="store-item">
+                    <h4>${item.name}</h4>
+                    <p><strong>Cost: ${item.cost} Points</strong></p>
+                </div>`;
+        });
+
+        // 3. Hide login, show shop
+        document.getElementById("loginArea").classList.add("hidden");
+        document.getElementById("shopArea").classList.remove("hidden");
+      }
+    </script>
+  </body>
+</html>

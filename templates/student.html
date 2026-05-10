@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Study Buddy - Student Arena</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 20px;
+        background-color: #fff3cd;
+      }
+      .card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        width: 400px;
+        margin: 0 auto;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      input,
+      select,
+      button {
+        width: 90%;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+      button {
+        background-color: #ffc107;
+        color: black;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 16px;
+      }
+      button:hover {
+        background-color: #e0a800;
+      }
+      .option-btn {
+        background-color: #17a2b8;
+        color: white;
+        display: block;
+        margin: 5px auto;
+        width: 95%;
+      }
+      .option-btn:hover {
+        background-color: #138496;
+      }
+      .hidden {
+        display: none;
+      }
+      #quizArea {
+        margin-top: 20px;
+        border-top: 2px solid #eee;
+        padding-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>🎮 Student Arena</h2>
+
+      <!-- Step 1: Student Enters Details -->
+      <div id="setupArea">
+        <input
+          type="text"
+          id="studentName"
+          placeholder="Enter your registered name"
+          required
+        />
+        <select id="grade">
+          <option value="1">Class 1</option>
+          <option value="5">Class 5</option>
+          <option value="8">Class 8</option>
+        </select>
+        <select id="subject">
+          <option value="Maths">Maths</option>
+          <option value="Science">Science</option>
+          <option value="English">English</option>
+        </select>
+        <button onclick="startQuiz()">Start Playing!</button>
+        <p id="setupMessage" style="color: red"></p>
+      </div>
+
+      <!-- Step 2: The Question Appears Here -->
+      <div id="quizArea" class="hidden">
+        <h3 id="questionText">Loading question...</h3>
+
+        <button class="option-btn" onclick="submitAnswer('A')" id="btnA">
+          A
+        </button>
+        <button class="option-btn" onclick="submitAnswer('B')" id="btnB">
+          B
+        </button>
+        <button class="option-btn" onclick="submitAnswer('C')" id="btnC">
+          C
+        </button>
+        <button class="option-btn" onclick="submitAnswer('D')" id="btnD">
+          D
+        </button>
+
+        <p
+          id="resultMessage"
+          style="font-weight: bold; font-size: 18px; margin-top: 15px"
+        ></p>
+        <button
+          onclick="startQuiz()"
+          id="nextBtn"
+          class="hidden"
+          style="background-color: #28a745; color: white"
+        >
+          Next Question
+        </button>
+      </div>
+    </div>
+
+    <script>
+      let currentQuestionId = null;
+
+      async function startQuiz() {
+        const name = document.getElementById("studentName").value;
+        const grade = document.getElementById("grade").value;
+        const subject = document.getElementById("subject").value;
+
+        if (!name) {
+          document.getElementById("setupMessage").innerText =
+            "Please enter your name!";
+          return;
+        }
+
+        // Ask Python for a question
+        const response = await fetch(
+          `/api/get_question?grade_class=${grade}&subject=${subject}`,
+        );
+        const questionData = await response.json();
+
+        if (response.status === 404) {
+          document.getElementById("setupMessage").innerText =
+            "No questions found! Ask a parent to add some.";
+          return;
+        }
+
+        // Hide setup, show quiz
+        document.getElementById("setupArea").classList.add("hidden");
+        document.getElementById("quizArea").classList.remove("hidden");
+        document.getElementById("nextBtn").classList.add("hidden");
+        document.getElementById("resultMessage").innerText = "";
+
+        // Put the question on the screen
+        currentQuestionId = questionData.id;
+        document.getElementById("questionText").innerText =
+          questionData.question_text;
+        document.getElementById("btnA").innerText =
+          "A) " + questionData.option_a;
+        document.getElementById("btnB").innerText =
+          "B) " + questionData.option_b;
+        document.getElementById("btnC").innerText =
+          "C) " + questionData.option_c;
+        document.getElementById("btnD").innerText =
+          "D) " + questionData.option_d;
+      }
+
+      async function submitAnswer(selectedOption) {
+        const studentName = document.getElementById("studentName").value;
+
+        const payload = {
+          student_name: studentName,
+          question_id: currentQuestionId,
+          selected_option: selectedOption,
+        };
+
+        // Send answer to Python to check
+        const response = await fetch("/api/check_answer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+
+        const msgElement = document.getElementById("resultMessage");
+        msgElement.innerText = result.message;
+        msgElement.style.color = result.correct ? "green" : "red";
+
+        // Show the next question button
+        document.getElementById("nextBtn").classList.remove("hidden");
+      }
+    </script>
+  </body>
+</html>

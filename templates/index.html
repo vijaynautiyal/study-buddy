@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Study Buddy - Sign Up</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 50px;
+        background-color: #f4f4f9;
+      }
+      .card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        width: 300px;
+        margin: 0 auto;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      input,
+      select,
+      button {
+        width: 90%;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+      button {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      button:hover {
+        background-color: #218838;
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>Join Study Buddy 🚀</h2>
+
+      <form id="signupForm">
+        <input
+          type="text"
+          id="name"
+          placeholder="Enter your full name"
+          required
+        />
+
+        <select id="role" required>
+          <option value="" disabled selected>Who are you?</option>
+          <option value="Student">I am a Student</option>
+          <option value="Parent">I am a Parent</option>
+        </select>
+
+        <!-- This only shows up if they pick "Student" -->
+        <select id="grade" class="hidden">
+          <option value="" disabled selected>Select your Class</option>
+          <option value="1">Class 1</option>
+          <option value="2">Class 2</option>
+          <option value="3">Class 3</option>
+          <option value="4">Class 4</option>
+          <option value="5">Class 5</option>
+          <option value="6">Class 6</option>
+          <option value="7">Class 7</option>
+          <option value="8">Class 8</option>
+        </select>
+
+        <button type="submit">Sign Up</button>
+      </form>
+
+      <p id="message" style="color: blue"></p>
+    </div>
+
+    <script>
+      // Logic to show/hide the Class dropdown
+      const roleSelect = document.getElementById("role");
+      const gradeSelect = document.getElementById("grade");
+
+      roleSelect.addEventListener("change", function () {
+        if (this.value === "Student") {
+          gradeSelect.classList.remove("hidden");
+          gradeSelect.required = true;
+        } else {
+          gradeSelect.classList.add("hidden");
+          gradeSelect.required = false;
+        }
+      });
+
+      // Logic to send data to Python
+      document
+        .getElementById("signupForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault(); // Stop page from reloading
+
+          const userData = {
+            name: document.getElementById("name").value,
+            role: document.getElementById("role").value,
+            grade_class: document.getElementById("grade").value || null,
+          };
+
+          // Send to our Python API
+          const response = await fetch("/api/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(userData),
+          });
+
+          const result = await response.json();
+          document.getElementById("message").innerText = result.message;
+          document.getElementById("signupForm").reset();
+        });
+    </script>
+  </body>
+</html>

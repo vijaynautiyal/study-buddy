@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Parent Dashboard - Add Questions</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 30px;
+        background-color: #e9ecef;
+      }
+      .card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        width: 400px;
+        margin: 0 auto;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      input,
+      select,
+      button,
+      textarea {
+        width: 90%;
+        padding: 10px;
+        margin: 8px 0;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+      button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+      }
+      .row input {
+        width: 45%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>Publish a Question 📚</h2>
+
+      <form id="questionForm">
+        <div class="row">
+          <select id="grade" required>
+            <option value="" disabled selected>Select Class</option>
+            <option value="1">Class 1</option>
+            <option value="5">Class 5</option>
+            <option value="8">Class 8</option>
+          </select>
+
+          <select id="subject" required>
+            <option value="" disabled selected>Select Subject</option>
+            <option value="Maths">Maths</option>
+            <option value="Science">Science</option>
+            <option value="English">English</option>
+          </select>
+        </div>
+
+        <textarea
+          id="questionText"
+          rows="3"
+          placeholder="Type the question here..."
+          required
+        ></textarea>
+
+        <input type="text" id="optA" placeholder="Option A" required />
+        <input type="text" id="optB" placeholder="Option B" required />
+        <input type="text" id="optC" placeholder="Option C" required />
+        <input type="text" id="optD" placeholder="Option D" required />
+
+        <select id="correctOpt" required>
+          <option value="" disabled selected>Which option is correct?</option>
+          <option value="A">Option A</option>
+          <option value="B">Option B</option>
+          <option value="C">Option C</option>
+          <option value="D">Option D</option>
+        </select>
+
+        <button type="submit">Publish to Study Buddy</button>
+      </form>
+
+      <p id="message" style="color: green; font-weight: bold"></p>
+    </div>
+
+    <script>
+      document
+        .getElementById("questionForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const questionData = {
+            grade_class: document.getElementById("grade").value,
+            subject: document.getElementById("subject").value,
+            question_text: document.getElementById("questionText").value,
+            option_a: document.getElementById("optA").value,
+            option_b: document.getElementById("optB").value,
+            option_c: document.getElementById("optC").value,
+            option_d: document.getElementById("optD").value,
+            correct_option: document.getElementById("correctOpt").value,
+          };
+
+          const response = await fetch("/api/add_question", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(questionData),
+          });
+
+          const result = await response.json();
+          document.getElementById("message").innerText = result.message;
+          document.getElementById("questionForm").reset();
+        });
+    </script>
+  </body>
+</html>
